@@ -12,3 +12,24 @@ This will then create a folder with everything needed to start a spark job, to a
 cd spark-on-brutus
 bsub -n 12 -W 1:00  < all.sh
 ```
+
+## Monitoring
+
+To monitor the status of a job you can use the bjobs command
+```
+bjobs
+```
+which outputs
+```
+[maderk@euler01 spark-on-brutus]$ bjobs
+JOBID      USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TIME
+2227145    maderk  RUN   beta.4h    euler01     12*e1442    spark_job  Oct  8 18:01
+```
+
+You can then view the spark console for this job by finding the main host (in this case e1442) and running the following ssh command to create a tunnel (replacing e1442 with the right name, and maderk with your username)
+```
+ssh -L8080:e1442:8080 maderk@euler01.hpc-lca.ethz.ch 
+```
+
+And then opening up a browser on your local machine to http://localhost:8080
+
