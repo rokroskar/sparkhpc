@@ -31,6 +31,6 @@ You can then view the spark console for this job by finding the main host (in th
 ssh -L8080:e1442:8080 -L4040:e1442:4040 maderk@euler01.hpc-lca.ethz.ch 
 ```
 
-And then opening up a browser on your local machine to 
-- http://localhost:8080 shows you the master/cluster status
-- http://localhost:4040 shows you the job status
+And then opening up a browser on your local machine to
+* [http://localhost:8080](http://localhost:8080)  shows you the master/cluster status panel
+* [http://localhost:4040](http://localhost:4040)  shows you the application status panel
