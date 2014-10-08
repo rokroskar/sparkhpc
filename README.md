@@ -13,7 +13,7 @@ To actually start the *example* job of calculating pi, type the following.
 
 ```
 cd spark-on-brutus
-bsub -cwd -o sparkpi.log < all.sh
+bsub < all.sh
 ```
 
 ### Explanation
