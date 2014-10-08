@@ -1,6 +1,8 @@
 #!/bin/sh
 #BSUB -J sparkpi_job
 #BSUB -W 00:10 # requesting 10 minutes
+#BSUB -cwd
+#BSUB -o sparkpi.log
 #BSUB -n 48 # requesting 48 cores -- request in multiples of 24 to get entire nodes
 
 module load new
