@@ -28,8 +28,9 @@ JOBID      USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TI
 
 You can then view the spark console for this job by finding the main host (in this case e1442) and running the following ssh command to create a tunnel (replacing e1442 with the right name, and maderk with your username)
 ```
-ssh -L8080:e1442:8080 maderk@euler01.hpc-lca.ethz.ch 
+ssh -L8080:e1442:8080 -L4040:e1442:4040 maderk@euler01.hpc-lca.ethz.ch 
 ```
 
-And then opening up a browser on your local machine to http://localhost:8080
-
+And then opening up a browser on your local machine to 
+- http://localhost:8080 shows you the master/cluster status
+- http://localhost:4040 shows you the job status
