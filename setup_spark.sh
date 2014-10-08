@@ -23,4 +23,5 @@ SPARK_HOME=$(pwd)/spark-1.1.0-bin-hadoop2.4
 export SPARK_HOME
 echo "Setting up temporary directories in defaults"
 echo "spark.local.dir  /scratch" > $SPARK_HOME/conf/spark-defaults.conf
+
 cd $startingDir
