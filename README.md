@@ -1,0 +1,1 @@
+# A setup guide for using Spark on Brutus taking advantage of MPI job scheduling
