@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J spark_job
-#BSUB -W 01:00 # requesting one hour of walltime
+#BSUB -J sparkpi_job
+#BSUB -W 00:10 # requesting 10 minutes
 #BSUB -n 48 # requesting 48 cores -- request in multiples of 24 to get entire nodes
 
 module load new
@@ -8,7 +8,7 @@ module load java
 module load open_mpi
 
 # setup the spark path
-setup_spark.sh
+. setup_spark.sh
 
 # initialize the nodes
 python start_spark_euler.py -c 8 -m 20g 
