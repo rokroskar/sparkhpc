@@ -6,12 +6,21 @@ git config --global http.proxy http://proxy.ethz.ch:3128
 git clone https://skicavs@bitbucket.org/skicavs/spark-on-brutus.git
 ```
 
-This will then create a folder with everything needed to start a spark job, to actually start the *example* job of calculating pi, type the following
+This will then create a folder with everything needed to start a spark job
+
+## Running a Job
+To actually start the *example* job of calculating pi, type the following. 
 
 ```
 cd spark-on-brutus
-bsub -n 12 -W 1:00  < all.sh
+bsub -cwd -n 12 -W 0:10 -o sparkpi.log  < all.sh
 ```
+
+### Explanation
+* -cwd    run from the current directory
+* -n 12   require at least 12 cores
+* -W 0:10  time out after 10 minutes (job will be killed)
+* -o sparkpi.log   the log file for the job
 
 ## Monitoring
 
