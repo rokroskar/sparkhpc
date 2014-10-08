@@ -7,15 +7,19 @@ module load new
 module load java
 module load open_mpi
 
+# setup the spark path
 setup_spark.sh
 
-python path_to/start_spark_euler.py -c 8 -m 20g 
+# initialize the nodes
+python start_spark_euler.py -c 8 -m 20g 
 
 # creates the slaves file, starts the spark master and worker processes using mpirun
 # the "-c" option specifies number of cores per worker
 # -m specifies SPARK_MEMORY
 
 # the specific example runs spark's pi estimation with a slices = 100 (first and only argument)
+
+echo " Master is set as $HOSTNAME"
 
 $SPARK_HOME/bin/spark-submit --class org.apache.spark.examples.SparkPi --master \
     spark://$HOSTNAME:7077 $SPARK_HOME/lib/spark-examples-1.1.0-hadoop2.4.0.jar \
