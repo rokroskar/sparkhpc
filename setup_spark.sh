@@ -3,7 +3,7 @@ export http_proxy=http://proxy.ethz.ch:3128/   # To use wget
 module load new java   # To use java
 
 startingDir=$(pwd)
-sparkVersion="spark-1.1.0-bin-hadoop2.4"
+sparkVersion="spark-1.0.2"
 cd ~ # go to home directory
 # check for / install spark
 if [ -d "$sparkVersion" ]
@@ -19,7 +19,7 @@ else
     $extCmd
     $rmCmd
 fi
-SPARK_HOME=$(pwd)/spark-1.1.0-bin-hadoop2.4
+SPARK_HOME=$(pwd)/$sparkVersion
 export SPARK_HOME
 echo "Setting up temporary directories in defaults"
 echo "spark.local.dir  /scratch" > $SPARK_HOME/conf/spark-defaults.conf
