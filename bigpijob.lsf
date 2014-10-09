@@ -1,9 +1,16 @@
 #!/bin/sh
+#BSUB -J bigsparkpi_job
+#BSUB -W 00:20 # requesting 10 minutes
 #BSUB -oo bsparkpi.log # output extra o means overwrite
 #BSUB -eo bsparkpi.err
+#BSUB -R "rusage[scratch=2000]" # 2000MB per core
+#BSUB -R "rusage[mem=1200]" # 1200MB per core (extra for java overhead)
+#BSUB -n 128 # requesting 128 cores -- request in multiples of 24 to get entire nodes
+
+
 #BSUB -R "rusage[scratch=1000]" # 1000MB per core
 #BSUB -R "rusage[mem=1000]" # 1000MB per core
-#BSUB -n 128 # requesting 24 cores -- request in multiples of 24 to get entire nodes
+
 
 module load new
 module load java
@@ -26,7 +33,7 @@ JARFILE="$SPARK_HOME/lib/spark-examples*.jar" # version depends on spark version
 
 $SPARK_HOME/bin/spark-submit --class org.apache.spark.examples.SparkPi --master \
     spark://$HOSTNAME:7077 $JARFILE \
-    1000
+    100000
 
 SPARK_SLAVES=$HOME/slaves_$LSB_JOBID
 $SPARK_HOME/sbin/stop-all.sh
