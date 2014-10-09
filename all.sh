@@ -4,6 +4,8 @@
 #BSUB -oo sparkpi.log # output extra o means overwrite
 #BSUB -eo sparkpi.err
 #BSUB -R "rusage[scratch=1000]" # 1000MB per core
+#BSUB -N # send mail upon completion
+#BSUB -u mader@biomed.ee.ethz.ch # send it to eth instead of brutus mail
 #BSUB -n 24 # requesting 24 cores -- request in multiples of 24 to get entire nodes
 
 module load new
