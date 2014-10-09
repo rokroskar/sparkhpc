@@ -3,6 +3,7 @@
 #BSUB -W 00:10 # requesting 10 minutes
 #BSUB -o sparkpi.log
 #BSUB -e sparkpi.err
+#BSUB -cwd "$(pwd)" # set the directory to the current one
 #BSUB -n 24 # requesting 24 cores -- request in multiples of 24 to get entire nodes
 
 module load new
