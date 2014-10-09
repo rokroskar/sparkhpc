@@ -18,7 +18,7 @@ To actually start the *example* job of calculating pi, type the following.
 
 ```
 cd spark-on-brutus
-bsub < all.sh
+bsub < pijob.lsf
 ```
 
 ## Monitoring

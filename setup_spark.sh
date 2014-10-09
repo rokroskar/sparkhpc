@@ -3,7 +3,7 @@ export http_proxy=http://proxy.ethz.ch:3128/   # To use wget
 module load new java   # To use java
 
 startingDir=$(pwd)
-sparkVersion="spark-1.0.2"
+sparkVersion="spark-1.0.2-bin-hadoop2"
 cd ~ # go to home directory
 # check for / install spark
 if [ -d "$sparkVersion" ]
