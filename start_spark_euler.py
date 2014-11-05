@@ -19,8 +19,7 @@ slave_file = '%s/slaves_%s'%(os.environ['HOME'],os.environ['LSB_JOBID'])
 # set up the slaves file
 with open(slave_file,'w') as slaves:
     for host in hosts :
-        if host != my_host : 
-            slaves.write("%s\n"%host)
+        slaves.write("%s\n"%host)
 
 if  __name__ == "__main__":
     import getopt
