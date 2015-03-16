@@ -5,14 +5,19 @@
 #BSUB -eo sparkpi.err
 #BSUB -R "rusage[scratch=2000]" # 2000MB per core
 #BSUB -R "rusage[mem=1200]" # 1200MB per core (extra for java overhead)
-#BSUB -n 24 # requesting 24 cores -- request in multiples of 24 to get entire nodes
+#BSUB -n 24 # requesting 24 cores 
+
+## NOTE: 
+# on euler,request in multiples of 24 to get entire nodes
+# on brutus, request in multiples of 48 to get entire nodes
+##
 
 module load new
 module load java
 module load open_mpi
 
-# setup the spark path
-. ./setup_spark.sh
+export SPARK_HOME=$HOME/spark
+
 
 # initialize the nodes
 python start_spark_euler.py -c 24 -m 24g 

@@ -5,8 +5,12 @@
 #BSUB -eo bsparkpi.err
 #BSUB -R "rusage[scratch=2000]" # 2000MB per core
 #BSUB -R "rusage[mem=1200]" # 1200MB per core (extra for java overhead)
-#BSUB -n 128 # requesting 128 cores -- request in multiples of 24 to get entire nodes
+#BSUB -n 128 # requesting 128 cores
 
+## NOTE: 
+# on euler,request in multiples of 24 to get entire nodes
+# on brutus, request in multiples of 48 to get entire nodes
+##
 
 #BSUB -R "rusage[scratch=1000]" # 1000MB per core
 #BSUB -R "rusage[mem=1000]" # 1000MB per core
