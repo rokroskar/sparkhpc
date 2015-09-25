@@ -1,1 +1,1 @@
-For up-to-date information on running Spark jobs through the regular scheduler on Brutus/Euler, see [the wikipages](https://ssdmsource.ethz.ch/roskarr/spark-on-hpc-clusters/wikis/running-spark-through-lsf).
+For up-to-date information on running Spark jobs through the regular scheduler on Brutus/Euler, see [the wikipages](https://ssdmsource.ethz.ch/roskarr/spark-on-hpc-clusters/wikis/home).
