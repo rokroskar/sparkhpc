@@ -1,30 +1,22 @@
 #!/bin/sh
 #BSUB -J bigsparkpi_job
-#BSUB -W 00:20 # requesting 10 minutes
+#BSUB -W 00:20 # requesting 20 minutes
 #BSUB -oo bsparkpi.log # output extra o means overwrite
 #BSUB -eo bsparkpi.err
 #BSUB -R "rusage[scratch=2000]" # 2000MB per core
 #BSUB -R "rusage[mem=1200]" # 1200MB per core (extra for java overhead)
-#BSUB -n 128 # requesting 128 cores
-
-## NOTE: 
-# on euler,request in multiples of 24 to get entire nodes
-# on brutus, request in multiples of 48 to get entire nodes
-##
-
-#BSUB -R "rusage[scratch=1000]" # 1000MB per core
-#BSUB -R "rusage[mem=1000]" # 1000MB per core
-
+#BSUB -n 96 # requesting 96 cores
 
 module load new
 module load java
 module load open_mpi
 
-# setup the spark path
-. ./setup_spark.sh
+# setup the spark paths
+# override the SPARK_HOME environment variable if you want to use your own Spark version
+./setup_spark.sh
 
-# initialize the nodes
-python start_spark_euler.py -c 24 -m 24g 
+# initialize the nodes -- run ./start_spark_lsf.py -h to see other options
+./start_spark_lsf.py 24 24g 
 
 # creates the slaves file, starts the spark master and worker processes using mpirun
 # the "-c" option specifies number of cores per worker

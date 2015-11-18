@@ -57,7 +57,7 @@ compute node $ ./start_spark_lsf.py 24 50G
 compute node $ ./start_notebook.py --spark --spark_conf "--master spark://<master-host>:7077
 ```
 
-where you would obviously replace `<master-host>` with the actual master hostname. 
+where you would obviously replace `<master-host>` with the actual master hostname, which will be printed on the screen by the `start_spark_lsf.py` script. 
 
 The provided `notebook_job.lsf` is a template job submission script for LSF. It can run the notebook server as a batch job, you 
 just need to note the host so you can connect to it. 
