@@ -22,26 +22,22 @@ with open(slave_file,'w') as slaves:
         slaves.write("%s\n"%host)
 
 if  __name__ == "__main__":
-    import getopt
+    import argparse
 
-    # set defaults
-    mem = None #os.environ.get('SPARK_MEMORY','2g')
-    cores = None
+    parser = argparse.ArgumentParser(
+        description='Start a standalone spark cluster on an HPC resource')
 
-    try  :
-        opts, args  = getopt.getopt(sys.argv[1:], "m:c:")
-    except getopt.GetoptError :
-        usage()
-        sys.exit(2)
+    parser.add_argument('--executor-cores', dest='cores', action='store',
+                        default=24, help='How many cores per executor')
 
-    for opt, arg in opts :
-        if opt == '-m' :
-            mem = arg
+    parser.add_argument('--executor-memory', dest='mem', action='store',
+                        default=None)
 
-        if opt == '-c' :     # set to 24 if sufficient memory
-            cores = arg
-	else : 
-	    cores = 24
+    
+    args = parser.parse_args()
+
+    cores = args.cores
+    mem = args.mem
 
     if mem is not None: os.environ['SPARK_EXECUTOR_MEMORY'] = mem
 
@@ -49,7 +45,7 @@ if  __name__ == "__main__":
 
     master_command = '%s/start-master.sh'%spark_sbin
 
-    slaves_command = 'mpirun --cpus-per-rank 24 --pernode %s/start-slave.sh 1 spark://%s:7077 -c %s &'%(spark_sbin,my_host,str(cores))
+    slaves_command = 'mpirun --cpus-per-rank 24 --pernode %s/start-slave.sh spark://%s:7077 -c %s &'%(spark_sbin,my_host,str(cores))
 
     print slaves_command
 
@@ -60,5 +56,6 @@ if  __name__ == "__main__":
     # start the host and slaves
     print 'master command ', master_command
     print 'slaves command ', slaves_command
-    os.system(master_command)
-    os.system(slaves_command)
+    #os.system(master_command)
+    #os.system(slaves_command)
+

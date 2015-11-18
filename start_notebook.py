@@ -3,6 +3,10 @@ import os
 from os.path import expanduser, exists
 import subprocess
 
+#
+# Initial inspiration for this script from https://github.com/felixcheung/vagrant-projects
+#
+
 notebook_config_template = """c = get_config()
 c.NotebookApp.ip = '*'
 c.NotebookApp.open_browser = False
@@ -156,7 +160,7 @@ def launch_spark(port, spark_options, spark_conf):
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description='Setup and launch a python notebook set up to serve a Spark session')
     
