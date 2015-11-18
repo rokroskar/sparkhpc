@@ -49,7 +49,15 @@ where it is running to simplify any tunneling that needs to be done.
 
 2. if you'd like the notebook to also initialize a spark context and connect to e.g. YARN or some other master, you should specify 
 the `--spark` option on the command line instead. This then also gives you the option of specifying other spark options via
-`--spark_options` or a configuration directory via `--spark_conf`. 
+`--spark_options` or a configuration directory via `--spark_conf`. For example, to launch a notebook connected to a standalone
+spark cluster created with the `start_spark_lsf.py` script, you would request an interactive job and do something like:
+
+```
+compute node $ ./start_spark_lsf.py 24 50G
+compute node $ ./start_notebook.py --spark --spark_conf "--master spark://<master-host>:7077
+```
+
+where you would obviously replace `<master-host>` with the actual master hostname. 
 
 The provided `notebook_job.lsf` is a template job submission script for LSF. It can run the notebook server as a batch job, you 
 just need to note the host so you can connect to it. 
