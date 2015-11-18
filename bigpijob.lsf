@@ -13,23 +13,21 @@ module load open_mpi
 
 # setup the spark paths
 # override the SPARK_HOME environment variable if you want to use your own Spark version
-./setup_spark.sh
+source ./setup_spark.sh
 
 # initialize the nodes -- run ./start_spark_lsf.py -h to see other options
 ./start_spark_lsf.py 24 24g 
 
-# creates the slaves file, starts the spark master and worker processes using mpirun
-# the "-c" option specifies number of cores per worker
-# -m specifies SPARK_MEMORY
-
 # the specific example runs spark's pi estimation with a slices = 100 (first and only argument)
-
-echo " Master is set as $HOSTNAME"
 JARFILE="$SPARK_HOME/lib/spark-examples*.jar" # version depends on spark version
 
+HOST=`hostname`
+
+echo "Master is set as $HOST"
+
 $SPARK_HOME/bin/spark-submit --class org.apache.spark.examples.SparkPi --master \
-    spark://$HOSTNAME:7077 $JARFILE \
-    100000
+    spark://$HOST:7077 $JARFILE \
+    1000
 
 SPARK_SLAVES=$HOME/slaves_$LSB_JOBID
 $SPARK_HOME/sbin/stop-all.sh

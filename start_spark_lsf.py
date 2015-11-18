@@ -21,8 +21,7 @@ spark_sbin = spark_dir + '/sbin'
 home_dir = os.environ['HOME']
 
 # figure out which hosts we have
-pat = re.compile('[e]\d+')
-hosts = pat.findall(os.environ.get('LSB_MCPU_HOSTS'))
+hosts = list(set(os.environ.get('LSB_HOSTS').split(' ')))
 
 # main host
 my_host = socket.gethostname()

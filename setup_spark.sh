@@ -8,4 +8,7 @@ unset PYTHONPATH
 echo "loading hadoop and spark modules"
 module load spark
 module load hadoop
+IP=`grep $HOSTNAME /etc/hosts | awk '{print $1}'`
+echo "The Spark driver will be available on host IP: $IP"
+
 
