@@ -1,6 +1,6 @@
 # Spark startup scripts
 
-The scripts here started as templates for running Spark on HPC clusters using LSF. 
+The scripts here started as templates for running Spark on HPC clusters using LSF. It should be straightforward to adapt it for other schedulers like PBS etc. 
 
 ## Setting up the cluster environment
 
