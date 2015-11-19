@@ -117,9 +117,12 @@ def launch_spark(port, spark_options, spark_conf):
     import os
     import subprocess
 
-    os.environ['PYSPARK_PYTHON'] = "/cluster/apps/spark/miniconda/envs/spark_workshop/bin/python"
+    # set this to whatever python executable you want to use
+    os.environ['PYSPARK_PYTHON'] = subprocess.check_output('which python', shell=True).rstrip()
+
     os.environ['PYSPARK_DRIVER_PYTHON'] = "jupyter"
-    os.environ['PYSPARK_DRIVER_PYTHON_OPTS'] = "notebook --config ~/.jupyter_spark_workshop/jupyter_notebook_config.py"
+    os.environ['PYSPARK_DRIVER_PYTHON_OPTS'] = \
+        "notebook --config {profile_path}/jupyter_notebook_config.py".format(profile_path=jupyter_config_path)
 
     if spark_conf is not None:
         os.environ['SPARK_CONF_DIR'] = spark_conf
