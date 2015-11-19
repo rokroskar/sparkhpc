@@ -15,10 +15,10 @@ class bc:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-spark_dir = os.environ.get('SPARK_HOME','$HOME/spark')
-spark_sbin = spark_dir + '/sbin'
 
 home_dir = os.environ['HOME']
+spark_dir = os.environ.get('SPARK_HOME','{home_dir}/spark'.format(home_dir=home_dir))
+spark_sbin = spark_dir + '/sbin'
 
 # figure out which hosts we have
 hosts = list(set(os.environ.get('LSB_HOSTS').split(' ')))
@@ -77,7 +77,7 @@ if  __name__ == "__main__":
     
     # Start the master
     master_command = "{spark_sbin}/start-master.sh".format(spark_sbin=spark_sbin)
-
+    print master_command
     master_out = subprocess.check_output(shlex.split(master_command), stderr=subprocess.STDOUT, env=env)
 
     master_log = master_out.split('logging to ')[1].rstrip()
