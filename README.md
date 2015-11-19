@@ -18,8 +18,9 @@ spark cluster...)
 ## Spark jupyter notebook
 
 Running Spark applications, especially with python, is really nice from the comforts of a [Jupyter notebook](http://jupyter.org/).
-The `start_notebook.py` script will setup and launch a secure, password-protected notebook for you. It will first ask for a 
-password for the notebook and generate a self-signed ssh certificate. To get some usage information just type
+The `start_notebook.py` script will setup and launch a secure, password-protected notebook for you. The first time you run the notebook
+script, you should run it with the `--setup` flag. It will first ask for a password for the notebook and generate a self-signed ssh
+certificate. To get some usage information just type
 
 ```
 $ ./start_notebook.py
@@ -61,7 +62,23 @@ compute node $ ./start_notebook.py --spark --spark_conf "--master spark://<maste
 where you would obviously replace `<master-host>` with the actual master hostname, which will be printed on the screen by the `start_spark_lsf.py` script. 
 
 The provided `notebook_job.lsf` is a template job submission script for LSF. It can run the notebook server as a batch job, you 
-just need to note the host so you can connect to it. 
+just need to note the host so you can connect to it. This is easily done with `bpeek` to inspect the output of the job:
+
+```
+head node $ bsub < notebook_job.lsf
+Generic job.
+Job <1351868> is submitted to queue <pub.1h>.
+
+head node $ bpeek
+The Spark driver will be available on host IP: 1.2.3.4
+Picked up _JAVA_OPTIONS: -XX:ParallelGCThreads=1
+[I 15:11:13.250 NotebookApp] Serving notebooks from local directory: /cluster/home03/sdid/roskarr
+[I 15:11:13.250 NotebookApp] 0 active kernels
+[I 15:11:13.250 NotebookApp] The IPython Notebook is running at: https://[all ip addresses on your system]:8889/
+[I 15:11:13.250 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+```
+
+So in this case, you could set up a port forward to host `1.2.3.4` and instruct your browser to connect to `https://1.2.3.4:8889`.
 
 
 
