@@ -20,7 +20,8 @@ spark cluster...)
 Running Spark applications, especially with python, is really nice from the comforts of a [Jupyter notebook](http://jupyter.org/).
 The `start_notebook.py` script will setup and launch a secure, password-protected notebook for you. The first time you run the notebook
 script, you should run it with the `--setup` flag. It will first ask for a password for the notebook and generate a self-signed ssh
-certificate. To get some usage information just type
+certificate - this is done to prevent other users of your cluster to stumble into your notebook by chance. To get some usage information
+just type
 
 ```
 $ ./start_notebook.py
