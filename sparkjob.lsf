@@ -32,4 +32,4 @@ $SPARK_HOME/bin/spark-submit \
 export SPARK_SLAVES=$HOME/slaves_$LSB_JOBID
 
 $SPARK_HOME/sbin/stop-all.sh
-$SPARK_HOME/sbin/stop-slaves.sh
+
