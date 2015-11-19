@@ -1,10 +1,8 @@
 #!/bin/sh
-#BSUB -J bigsparkpi_job
-#BSUB -W 00:20 # requesting 20 minutes
-#BSUB -oo bsparkpi.log # output extra o means overwrite
-#BSUB -eo bsparkpi.err
-#BSUB -R "rusage[scratch=2000]" # 2000MB per core
-#BSUB -R "rusage[mem=1200]" # 1200MB per core (extra for java overhead)
+#BSUB -J sparkpi
+#BSUB -W 00:10 # requesting 10 minutes
+#BSUB -oo sparkpi.log # output extra o means overwrite
+#BSUB -eo sparkpi.err
 #BSUB -n 96 # requesting 96 cores
 
 module load new
@@ -12,8 +10,10 @@ module load java
 module load open_mpi
 
 # setup the spark paths
-# override the SPARK_HOME environment variable if you want to use your own Spark version
-source ./setup_spark.sh
+export SPARK_HOME=$HOME/spark
+
+# custom python installation path
+export PATH=$HOME/miniconda/bin:$PATH
 
 # initialize the nodes -- run ./start_spark_lsf.py -h to see other options
 ./start_spark_lsf.py 24 24g 

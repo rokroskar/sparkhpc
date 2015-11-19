@@ -78,7 +78,7 @@ if  __name__ == "__main__":
     # Start the master
     master_command = "{spark_sbin}/start-master.sh".format(spark_sbin=spark_sbin)
     print master_command
-    master_out = subprocess.check_output(shlex.split(master_command), stderr=subprocess.STDOUT, env=env)
+    master_out = subprocess.check_output(master_command, stderr=subprocess.STDOUT, env=env)
 
     master_log = master_out.split('logging to ')[1].rstrip()
 
