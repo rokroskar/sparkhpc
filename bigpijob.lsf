@@ -29,6 +29,7 @@ $SPARK_HOME/bin/spark-submit \
     --class org.apache.spark.examples.SparkPi --master \
     spark://$HOST:7077 $JARFILE 1000
 
-SPARK_SLAVES=$HOME/slaves_$LSB_JOBID
+export SPARK_SLAVES=$HOME/slaves_$LSB_JOBID
+
 $SPARK_HOME/sbin/stop-all.sh
 $SPARK_HOME/sbin/stop-slaves.sh
