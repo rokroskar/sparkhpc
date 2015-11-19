@@ -42,6 +42,7 @@ optional arguments:
 ```
 
 You have two options for launching the notebook:  
+
 1. if you want to launch a spark context by hand and do all the configuration inside
 your application, just launch the notebook using the `--launch` flag (this does nothing spark-specific, just starts the server). Because
 this script is meant to be used while running an interactive session on an HPC cluster, it will also tell you the IP of the machine
