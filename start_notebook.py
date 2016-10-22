@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import os
 from os.path import expanduser, exists
 import subprocess
@@ -44,12 +45,19 @@ def setup_notebook(port):
         # get a password
         from notebook.auth import passwd
         
-        print bc.WARNING + '[setup_notebook] '+bc.ENDC+'This script will create a Jupyter notebook profile for working remotely'
-        print bc.WARNING + '[setup_notebook] '+bc.ENDC+'When it is finished, you can find the configuration in %s\n'%(bc.UNDERLINE + jupyter_config_path + bc.ENDC)
-        print bc.WARNING + '[setup_notebook] '+bc.ENDC+'First, we need a *new* password for your Jupyter notebook\n'
+        print(bc.WARNING + '[setup_notebook] '+bc.ENDC+'This script will create a Jupyter notebook profile for working remotely')
+        print(bc.WARNING + '[setup_notebook] '+bc.ENDC+'When it is finished, you can find the configuration in %s\n'%(bc.UNDERLINE + jupyter_config_path + bc.ENDC))
+        print(bc.WARNING + '[setup_notebook] '+bc.ENDC+'First, we need a *new* password for your Jupyter notebook\n')
         new_pass = passwd()
 
-        print bc.WARNING + '[setup_notebook] '+bc.ENDC+'Creating an SSL certificate to enable a secure connection\nThe certificate will be in your ~/.ssh directory\n'
+        print(bc.WARNING + '[setup_notebook] '+bc.ENDC+'Creating an SSL certificate to enable a secure connection\nThe certificate will be in your ~/.ssh directory\n')
+
+        # make sure the .ssh directory is there before continuing
+        sshdir = '{home}/.ssh'.format(home=home)
+        if not os.path.exists(sshdir):
+            os.makedirs(sshdir)
+            os.fchmod(sshdir, 700)                        
+
         # make an ssl certificate
         certfile = "{home}/.ssh/notebook_cert.pem".format(home=home)
 
@@ -57,7 +65,7 @@ def setup_notebook(port):
 
         lines = out.split('\n')
         for l in lines : 
-            print bc.OKGREEN + '[openssl] ' + bc.ENDC + l
+            print(bc.OKGREEN + '[openssl] ' + bc.ENDC + l)
         
         # write the notebook config
 
@@ -67,11 +75,10 @@ def setup_notebook(port):
             f.write(notebook_config_template.format(
                 password=new_pass, certfile=certfile, port=port))
         
-        print bc.WARNING + '[setup_notebook] '+ bc.BOLD + 'Notebook setup complete' + bc.ENDC
+        print(bc.WARNING + '[setup_notebook] '+ bc.BOLD + 'Notebook setup complete' + bc.ENDC)
             
     else:
-        print bc.FAIL + "The jupyter notebook already looks set up -- if this is not the case, delete {dir} and run the script again.".format(dir=jupyter_config_path) + bc.ENDC
-
+        print(bc.FAIL + "The jupyter notebook already looks set up -- if this is not the case, delete {dir} and run the script again.".format(dir=jupyter_config_path) + bc.ENDC)
 
 def launch_notebook(port):
     # launch the notebook
@@ -90,7 +97,7 @@ def launch_notebook(port):
         conf_port = int(re.findall('port = (\d+)', conf.read())[0])
 
     if conf_port != port:
-        print bc.WARNING + "Overriding the port found in the existing configuration" + bc.ENDC
+        print(bc.WARNING + "Overriding the port found in the existing configuration" + bc.ENDC)
         argv.append('--port={port}'.format(port=port))
 
     # determine if we're running on a compute node
@@ -106,7 +113,7 @@ def launch_notebook(port):
     else:
         ip = 'localhost'
 
-    print bc.BOLD + "To access the notebook, inspect the output below for the port number, then point your browser to https://{ip}:<port_number>".format(ip=ip) + bc.ENDC
+    print(bc.BOLD + "To access the notebook, inspect the output below for the port number, then point your browser to https://{ip}:<port_number>".format(ip=ip) + bc.ENDC)
     launch_new_instance()
 
 def launch_spark(port, spark_options, spark_conf):
@@ -118,7 +125,7 @@ def launch_spark(port, spark_options, spark_conf):
     import subprocess
 
     # set this to whatever python executable you want to use
-    os.environ['PYSPARK_PYTHON'] = subprocess.check_output('which python', shell=True).rstrip()
+    os.environ['PYSPARK_PYTHON'] = sys.executable
 
     os.environ['PYSPARK_DRIVER_PYTHON'] = "jupyter"
     os.environ['PYSPARK_DRIVER_PYTHON_OPTS'] = \
@@ -133,7 +140,7 @@ def launch_spark(port, spark_options, spark_conf):
         conf_port = int(re.findall('port = (\d+)', conf.read())[0])
 
     if conf_port != port:
-        print bc.WARNING + "Overriding the port found in the existing configuration" + bc.ENDC
+        print(bc.WARNING + "Overriding the port found in the existing configuration" + bc.ENDC)
         os.environ['PYSPARK_DRIVER_PYTHON_OPTS'] += ' --port={port}'.format(port=port)
 
     # determine if we're running on a compute node
@@ -147,8 +154,8 @@ def launch_spark(port, spark_options, spark_conf):
     else:
         ip = 'localhost'
 
-    print bc.BOLD + "To access the notebook, inspect the output below for the port number, then point your browser to https://{ip}:<port_number>".format(ip=ip) \
-+ bc.ENDC
+    print(bc.BOLD + "To access the notebook, inspect the output below for the port number, then point your browser to https://{ip}:<port_number>".format(ip=ip) \
++ bc.ENDC)
     
     args = ["{spark_home}/bin/pyspark".format(spark_home=spark_home)]
 
@@ -156,7 +163,7 @@ def launch_spark(port, spark_options, spark_conf):
         for opt in spark_options.split(' '): 
             args.append(opt)
 
-    print args
+    print(args)
 
     subprocess.call(args)
 

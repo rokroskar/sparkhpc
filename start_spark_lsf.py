@@ -30,11 +30,11 @@ my_host = socket.gethostname()
 slave_file = '%s/slaves_%s'%(os.environ['HOME'],os.environ['LSB_JOBID'])
 
 # set up the slaves file
-with open(slave_file,'w') as slaves:
-    for host in hosts :
-        slaves.write("%s\n"%host)
+# with open(slave_file,'w') as slaves:
+#     for host in hosts :
+#         slaves.write("%s\n"%host)
 
-slaves_template ="mpirun --cpus-per-rank 24 --pernode {spark_sbin}/start-slave.sh {master} -c {cores}"
+slaves_template ="mpirun {spark_sbin}/start-slave.sh {master} -c 1"
 
 if  __name__ == "__main__":
     description = """
@@ -50,8 +50,8 @@ if  __name__ == "__main__":
     parser.add_argument('cores', action='store',
                         default=None, help='how many cores to assign to each worker')
 
-    parser.add_argument('memory', action='store',
-                        default=None, help='total memory for each worker')
+    parser.add_argument('memory', action='store', type=int,
+                        default=None, help='total memory for each worker in GB')
 
     parser.add_argument('--log-directory', action='store', default='%s/spark-scratch/logs'%home_dir,
                         help='directory for worker and master log files', dest='logdir')
@@ -68,7 +68,11 @@ if  __name__ == "__main__":
     cores = args.cores
     mem = args.memory
 
-    if mem is not None: os.environ['SPARK_EXECUTOR_MEMORY'] = mem
+    if mem is None: 
+        mem = 2
+    
+    os.environ['SPARK_EXECUTOR_MEMORY'] = '%dG'%mem
+    os.environ['SPARK_WORKER_MEMORY'] = '%dG'%(mem+1)
 
     os.environ['SPARK_SLAVES'] = slave_file
     os.environ['SPARK_LOG_DIR'] = args.logdir
@@ -78,7 +82,7 @@ if  __name__ == "__main__":
     # Start the master
     master_command = "{spark_sbin}/start-master.sh".format(spark_sbin=spark_sbin)
     print master_command
-    master_out = subprocess.check_output(master_command, stderr=subprocess.STDOUT, env=env)
+    master_out = subprocess.check_output(master_command, env=env)
 
     master_log = master_out.split('logging to ')[1].rstrip()
 
@@ -100,10 +104,10 @@ if  __name__ == "__main__":
     print '['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master running at %s'%master_url
     print '['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master UI available at %s'%master_webui
 
+    sys.stdout.flush()
+
     # Start the workers
     slaves_command = slaves_template.format(spark_sbin=spark_sbin, master=master_url, cores=cores)
     print slaves_command
-    subprocess.Popen(shlex.split(slaves_command), env = env)
-
-
-    
+    p = subprocess.Popen(shlex.split(slaves_command), env = env)
+    p.wait()
