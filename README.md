@@ -80,6 +80,3 @@ Picked up _JAVA_OPTIONS: -XX:ParallelGCThreads=1
 ```
 
 So in this case, you could set up a port forward to host `1.2.3.4` and instruct your browser to connect to `https://1.2.3.4:8889`.
-
-
-
