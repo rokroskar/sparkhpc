@@ -120,9 +120,6 @@ class SparkJob(object):
             print 'Job %s not yet started'%jobid
 
     def submit(self): 
-        raise NotImplementedError
-
-    def submit(self): 
         """Write job file to current working directory and submit to LSF"""
         with open(self.template, 'r') as template_file: 
             template_str = template_file.read()
