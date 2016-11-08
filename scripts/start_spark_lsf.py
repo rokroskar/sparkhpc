@@ -51,7 +51,7 @@ if  __name__ == "__main__":
                         default=None, help='how many cores to assign to each worker')
 
     parser.add_argument('memory', action='store', type=int,
-                        default=None, help='total memory for each worker in GB')
+                        default=None, help='total memory for each worker in MB')
 
     parser.add_argument('--log-directory', action='store', default='%s/spark-scratch/logs'%home_dir,
                         help='directory for worker and master log files', dest='logdir')
@@ -66,13 +66,13 @@ if  __name__ == "__main__":
         exit(0)
                               
     cores = args.cores
-    mem = args.memory
+    mem = args.memory/1000
 
     if mem is None: 
         mem = 2
     
     os.environ['SPARK_EXECUTOR_MEMORY'] = '%dG'%mem
-    os.environ['SPARK_WORKER_MEMORY'] = '%dG'%(mem+1)
+    os.environ['SPARK_WORKER_MEMORY'] = '%dG'%mem
 
     os.environ['SPARK_SLAVES'] = slave_file
     os.environ['SPARK_LOG_DIR'] = args.logdir

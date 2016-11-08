@@ -1,11 +1,14 @@
+#!/bin/env python
 #
 #
 # CLI for starting and running Spark standalone clusters on HPC resources
 #
 #
 
+from __future__ import print_function
 import click
 from sparkhpc import sparklsf
+import subprocess
 
 @click.group()
 def cli():
@@ -21,28 +24,41 @@ def cli():
 @click.option('--wait', default=0, help='Seconds to wait until job starts')
 def submit(ncores, walltime, jobname, template, driver_memory, executor_memory, wait):
     """Submit the spark cluster as an LSF job"""
-
     sj = sparklsf.SparkJob(ncores=ncores, walltime=walltime, jobname=jobname, template=template,
                            driver_memory=driver_memory, executor_memory=executor_memory)
     sj.submit()
 
     if wait: 
-        print 'Waiting for job to start'
+        print('Waiting for job to start')
         sj.wait_to_start()
         #print 'Job %s running with %d cores'%(sj.jobid, ncores)
 
 
 @cli.command()
-@click.argument('jobid', type=str) 
-def connect_info(jobid):
-    if sparklsf._job_started(jobid): 
-        print 'master URL: %s'%sparklsf._master_url(jobid)[0]
-        print 'Spark UI: %s'%sparklsf._master_ui(jobid)[0]
-    else: 
-        print 'Job not yet started'
+def info():
+    """Get info about currently running clusters"""
+    sjs = sparklsf.current_clusters()
+
+    if len(sjs) == 0: 
+        print('No Spark clusters found')
+
+    for i,sj in enumerate(sjs): 
+        print('----- Cluster %d -----'%i)
+        if sparklsf.job_started(sj.jobid): 
+            print('Number of cores: %s'%sj.ncores)
+            print('master URL: %s'%sparklsf.master_url(sj.jobid)[0])
+            print('Spark UI: %s'%sparklsf.master_ui(sj.jobid)[0])
+        else: 
+            print('Job %s yet started'%jobid)
+
+
+@cli.command()
+@click.argument('clusterid', type=click.INT)
+def kill(clusterid):
+    """Kill a currently running cluster"""
+    sjs = sparklsf.current_clusters()
+    out = subprocess.check_output(['bkill', '%s'%sjs[clusterid].jobid])
+    print(out)
 
 if __name__ == "__main__":
     cli()
-
-
-

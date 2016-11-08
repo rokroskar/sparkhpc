@@ -12,5 +12,5 @@ setup(name="sparkhpc",
       author_email="roskar@ethz.ch",
       package_dir={'sparkhpc/':''},
       packages=['sparkhpc'],
-      scripts=['scripts/startspark.py', 'scripts/start_spark_lsf.py', 'scripts/start_notebook.py']
+      scripts=['scripts/sparkcluster', 'scripts/start_spark_lsf.py', 'scripts/start_notebook.py']
 )
