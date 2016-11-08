@@ -1,35 +1,26 @@
 #!/bin/sh
-#BSUB -J sparkpi
-#BSUB -W 00:10 # requesting 10 minutes
-#BSUB -oo sparkpi.log # output extra o means overwrite
-#BSUB -eo sparkpi.err
-#BSUB -n 96 # requesting 96 cores
+#BSUB -J spark-ngs
+#BSUB -W {walltime} # runtime to request
+#BSUB -o spark-ngs-%J.log # output extra o means overwrite
+#BSUB -n {ncores} # requesting ncores cores
+#BSUB -R "span[hosts=-1] rusage[mem={mem}]" # take any available core with mem GB of memory
 
-module load new
-module load java
-module load open_mpi
+#module load new
+#module load java
+#module load open_mpi
+
+#source setup_environment.sh
 
 # setup the spark paths
 export SPARK_HOME=$HOME/spark
 
 # custom python installation path
-export PATH=$HOME/miniconda/bin:$PATH
+#export PATH=$HOME/miniconda/bin:$PATH
 
 # initialize the nodes -- run ./start_spark_lsf.py -h to see other options
-./start_spark_lsf.py 24 24g 
+export SPARK_LOCAL_DIRS="$TMPDIR /scratch/spark"
+export LOCAL_DIRS="$TMPDIR, /scratch/spark"
+export SPARK_WORKER_DIR="$TMPDIR/work, /scratch/spark/work"
 
-# the specific example runs spark's pi estimation with a slices = 100 (first and only argument)
-JARFILE="$SPARK_HOME/lib/spark-examples*.jar" # version depends on spark version
-
-HOST=`hostname`
-
-echo "Master is set as $HOST"
-
-$SPARK_HOME/bin/spark-submit \
-    --class org.apache.spark.examples.SparkPi --master \
-    spark://$HOST:7077 $JARFILE 1000
-
-export SPARK_SLAVES=$HOME/slaves_$LSB_JOBID
-
-$SPARK_HOME/sbin/stop-all.sh
+start_spark_lsf.py 24 {mem}
 

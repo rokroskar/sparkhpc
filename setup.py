@@ -7,8 +7,10 @@ import os
 
 currdir = os.getcwd()
 
-setup(name="spark-on-hpc-clusters",
+setup(name="sparkhpc",
       author="Rok Roskar",
       author_email="roskar@ethz.ch",
-      scripts=['start_spark_lsf.py', 'start_notebook.py']
+      package_dir={'sparkhpc/':''},
+      packages=['sparkhpc'],
+      scripts=['scripts/startspark.py', 'scripts/start_spark_lsf.py', 'scripts/start_notebook.py']
 )
