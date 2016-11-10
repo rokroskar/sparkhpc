@@ -1,6 +1,10 @@
-# `sparkhpc`: deploy Spark standalone on High-Performance Computing resources
+# sparkhpc: Spark on HPC clusters made easy
+
+This package tries to greatly simplify deploying and managing [Apache Spark](http://spark.apache.org) clusters on HPC resources. 
 
 ## Usage
+
+There are two options for using this library: from the command line or directly from python code. 
 
 ### Command line
 
@@ -35,12 +39,12 @@ Options:
   --help              Show this message and exit.
 ```
 
-#### Submit a cluster
+#### Start a cluster
 ```
 $ sparkcluster start 10
 ```
 
-#### Get information about running clusters
+#### Get information about currently running clusters
 ```
 $ sparkcluster info
 ----- Cluster 0 -----
