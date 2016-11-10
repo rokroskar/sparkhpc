@@ -26,14 +26,6 @@ hosts = list(set(os.environ.get('LSB_HOSTS').split(' ')))
 # main host
 my_host = socket.gethostname()
 
-# set up slave file
-slave_file = '%s/slaves_%s'%(os.environ['HOME'],os.environ['LSB_JOBID'])
-
-# set up the slaves file
-# with open(slave_file,'w') as slaves:
-#     for host in hosts :
-#         slaves.write("%s\n"%host)
-
 slaves_template ="mpirun {spark_sbin}/start-slave.sh {master} -c 1"
 
 if  __name__ == "__main__":

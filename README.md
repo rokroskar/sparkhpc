@@ -1,19 +1,63 @@
-# Spark startup scripts
+# `sparkhpc`: deploy Spark standalone on High-Performance Computing resources
 
-The scripts here started as templates for running Spark on HPC clusters using LSF. It should be straightforward to adapt it for other schedulers like PBS etc. 
+## Usage
 
-## Setting up the cluster environment
+### Command line
 
-The `setup_spark.sh` script initializes some environment variables. This will be cluster-specific and needs to be adapted. 
+```
+$ sparkcluster
+Usage: sparkcluster [OPTIONS] COMMAND [ARGS]...
 
-## Starting a standalone spark cluster on an HPC resource
+Options:
+  --scheduler [lsf]  Which scheduler to use
+  --help             Show this message and exit.
 
-The main component is the `start_spark_lsf.py` script, which spawns a Spark standalone cluster. It does so using `mpirun` because
-this way the scheduler can keep track of the spark processes. The standard spark scripts use `ssh` which 
-means that if your job terminates unexpectedly, your spark cluster results in a bunch of ghost 
-processes that the scheduler can't control. Using the script here, the scheduler will most likely be able 
-to clean up after you if the job fails or does not terminate gracefully (or you forget to shut down the 
-spark cluster...)
+Commands:
+  info    Get info about currently running clusters
+  kill    Kill a currently running cluster
+  submit  Submit the spark cluster as an LSF job
+
+$ sparkcluster submit 10
+
+$ sparkcluster info
+----- Cluster 0 -----
+Job 31454252 yet started
+
+$ sparkcluster info
+----- Cluster 0 -----
+Number of cores: 4
+master URL: spark://10.11.12.13:7077
+Spark UI: http://10.11.12.13:8080
+
+$ sparkcluster kill 0
+Job <31463649> is being terminated
+```
+
+### Python code
+
+```python
+import sparkhpc
+import pyspark
+
+sj = sparkhpc.LSFSparkJob(ncores=10)
+
+sj.wait_to_start()
+
+master = sj.master_url(sj.jobid)
+
+sc = pyspark.SparkContext(master=master)
+
+sc.parallelize(...)
+```
+
+## Installation
+
+```
+$ python setup.py install
+```
+
+This will install the python package to your default package directory as well as the `sparkcluster` command-line script. 
+
 
 ## Spark jupyter notebook
 

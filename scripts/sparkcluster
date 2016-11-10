@@ -16,14 +16,15 @@ import subprocess
 def cli(ctx, scheduler):
     ctx.obj['SJ'] = sparkjob.sparkjob_factory(scheduler)
 
+
 @cli.command()
 @click.argument('ncores')
 @click.option('--walltime', default="00:30", help="Walltime in HH:MM format")
 @click.option('--jobname', default='spark', help='Name to use for the job')
-@click.option('--template', default='./sparkjob.lsf.template', help='Job template path')
+@click.option('--template', default=None, help='Job template path')
 @click.option('--driver-memory', default='2G', help='Spark driver memory', envvar='SPARK_DRIVER_MEMORY')
 @click.option('--executor-memory', default='2G', help='Spark executor memory', envvar='SPARK_EXECUTOR_MEMORY')
-@click.option('--wait', default=0, help='Seconds to wait until job starts')
+@click.option('--wait/--no-wait', default=False, help='Wait until the job starts')
 @click.pass_context
 def submit(ctx, ncores, walltime, jobname, template, driver_memory, executor_memory, wait):
     """Submit the spark cluster as an LSF job"""
@@ -32,12 +33,13 @@ def submit(ctx, ncores, walltime, jobname, template, driver_memory, executor_mem
 
     sj = SJ(ncores=ncores, walltime=walltime, jobname=jobname, template=template,
             driver_memory=driver_memory, executor_memory=executor_memory)
-    sj.submit()
-
+    
     if wait: 
-        print('Waiting for job to start')
+        print('Waiting for job to start - ctrl-c to stop')
         sj.wait_to_start()
-        
+    else:
+        sj.submit()
+    
 
 @cli.command()
 @click.pass_context
@@ -51,22 +53,36 @@ def info(ctx):
 
     for i,sj in enumerate(sjs): 
         print('----- Cluster %d -----'%i)
-        if SJ.job_started(sj.jobid): 
+        if sj.job_started(): 
             print('Number of cores: %s'%sj.ncores)
-            print('master URL: %s'%SJ.master_url(sj.jobid)[0])
-            print('Spark UI: %s'%SJ.master_ui(sj.jobid)[0])
+            print('master URL: %s'%sj.master_url()[0])
+            print('Spark UI: %s'%sj.master_ui()[0])
         else: 
-            print('Job %s yet started'%sj.jobid)
+            print('Job %s not yet started'%sj.jobid)
 
 
 @cli.command()
-@click.argument('clusterid', type=click.INT)
+@click.argument('clusterid')
 @click.pass_context
 def kill(ctx, clusterid):
-    """Kill a currently running cluster"""
+    """Kill a currently running cluster ('all' to kill all clusters)"""
     SJ = ctx.obj['SJ']
-    SJ.kill_cluster(clusterid)
-    
+    sjs = SJ.current_clusters()
+
+    if clusterid == 'all': 
+        for sj in sjs: 
+            sj.kill()
+    elif int(clusterid) < len(sjs): 
+        sjs[int(clusterid)].kill()
+    else: 
+        raise RuntimeError('Cluster %s does not exist'%clusterid)
+
+@cli.command()
+@click.option('--mem', default=2000, help='Memory in MB')
+@click.pass_context
+def start(ctx, mem):
+    """Start the Spark cluster within a current job context"""
+    sparkjob.start_cluster(mem)
 
 if __name__ == "__main__":
     cli(obj={})
