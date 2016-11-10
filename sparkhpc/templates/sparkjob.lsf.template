@@ -3,7 +3,7 @@
 #BSUB -W {walltime} # runtime to request
 #BSUB -o {jobname}-%J.log # output extra o means overwrite
 #BSUB -n {ncores} # requesting ncores cores
-#BSUB -R "span[hosts=-1] rusage[mem={memory}]" # take any available core with mem GB of memory
+#BSUB -R "span[hosts=-1] rusage[mem={memory}]" # take any available core with mem MB of memory
 
 # setup the spark paths
 export SPARK_HOME={spark_home}

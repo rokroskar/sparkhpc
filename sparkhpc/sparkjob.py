@@ -36,6 +36,7 @@ def sparkjob_factory(scheduler):
     else: 
         raise RuntimeError('Scheduler %s not supported'%scheduler)
 
+home_dir = os.path.expanduser('~')
 
 class SparkJob(object): 
     """
@@ -68,10 +69,15 @@ class SparkJob(object):
         if jobid is not None: 
             jobid = str(jobid)
             try: 
-                with open(os.path.join(os.path.expanduser('~'), '.sparkhpc%s'%jobid)) as f:
+                with open(os.path.join(home_dir, '.sparkhpc%s'%jobid)) as f:
                     self.prop_dict = json.load(f)
             except Exception as e: 
                 raise(e)
+
+        if spark_home is None: 
+            spark_home = os.environ.get('SPARK_HOME', os.path.join(os.path.expanduser('~'),'spark'))   
+            if not os.path.exists(spark_home):
+                raise RuntimeError('Please make sure you either put spark in ~/spark or set the SPARK_HOME environment variable.')
 
         # save the properties in a dictionary
         self.prop_dict = {'ncores': ncores,
@@ -94,7 +100,7 @@ class SparkJob(object):
 
     def _dump_to_json(self):
         """Write the data to recreate this SparkJob to a JSON file"""
-        filename = os.path.join(os.path.expanduser("~"), '.sparkhpc%s'%self.jobid)
+        filename = os.path.join(home_dir, '.sparkhpc%s'%self.jobid)
         with open(filename, 'w') as fp:
             json.dump(self.prop_dict, fp)
 
@@ -121,7 +127,7 @@ class SparkJob(object):
             master_url = re.findall('(spark://\S+:\d{4})', job_peek)
             if len(master_url) == 0: 
                 raise RuntimeError('Unable to obtain information about Spark master -- are you sure it is running?')
-            return master_url
+            return master_url[0]
         else: 
             print 'Job %s not yet started'%jobid
 
@@ -138,7 +144,7 @@ class SparkJob(object):
             master_ui = re.findall('(http://\S+:\d{4})', job_peek)
             if len(master_ui) == 0: 
                 raise RuntimeError('Unable to obtain information about Spark master -- are you sure it is running?')
-            return master_ui
+            return master_ui[0]
         else: 
             print 'Job %s not yet started'%jobid
 
@@ -222,9 +228,8 @@ _sparkjob_registry = {'lsf': LSFSparkJob}
 def start_cluster(memory, timeout=30, spark_home=None):
     """Start the spark cluster"""
 
-    home_dir = os.environ['HOME']
     if spark_home is None: 
-        spark_home = os.environ.get('SPARK_HOME','{home_dir}/spark'.format(home_dir=home_dir))
+        spark_home = os.environ.get('SPARK_HOME', os.path.join(home_dir,'spark'))
     spark_sbin = spark_home + '/sbin'
 
     os.environ['SPARK_EXECUTOR_MEMORY'] = '%s'%memory
@@ -233,7 +238,7 @@ def start_cluster(memory, timeout=30, spark_home=None):
     env = os.environ
     
     # Start the master
-    master_command = "{spark_sbin}/start-master.sh".format(spark_sbin=spark_sbin)
+    master_command = os.path.join(spark_sbin, 'start-master.sh')
     print master_command
     master_out = subprocess.check_output(master_command, env=env)
 

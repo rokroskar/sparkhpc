@@ -59,8 +59,8 @@ def info(ctx):
         print('----- Cluster %d -----'%i)
         if sj.job_started(): 
             print('Number of cores: %s'%sj.ncores)
-            print('master URL: %s'%sj.master_url()[0])
-            print('Spark UI: %s'%sj.master_ui()[0])
+            print('master URL: %s'%sj.master_url())
+            print('Spark UI: %s'%sj.master_ui())
         else: 
             print('Job %s not yet started'%sj.jobid)
 
@@ -87,7 +87,7 @@ def stop(ctx, clusterid):
 @click.pass_context
 def launch(ctx, memory):
     """Launch the Spark master and workers within a current job context"""
-    sparkjob.start_cluster(mem)
+    sparkjob.start_cluster(memory)
 
 if __name__ == "__main__":
     cli(obj={})
