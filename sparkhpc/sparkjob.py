@@ -57,11 +57,9 @@ class SparkJob(object):
                 jobid=None,
                 jobname='spark', 
                 ncores='4', 
-                mem=2000,
                 walltime='00:30', 
                 template=None, 
-                executor_memory=None, 
-                driver_memory=None, 
+                memory='2000', 
                 config_dir=None, 
                 follow_up_script=""):
         
@@ -76,11 +74,9 @@ class SparkJob(object):
 
         # save the properties in a dictionary
         self.prop_dict = {'ncores': ncores,
-                          'mem': mem,
                           'walltime': walltime,
                           'template': template,
-                          'executor_memory': executor_memory,
-                          'driver_memory': driver_memory,
+                          'memory': memory,
                           'config_dir': config_dir,
                           'jobname': jobname,
                           'follow_up_script': follow_up_script, 
@@ -154,9 +150,10 @@ class SparkJob(object):
             with open(self.template, 'r') as template_file: 
                 template_str = template_file.read()
 
+        print template_str
         job = template_str.format(walltime=self.walltime, 
                                   ncores=self.ncores, 
-                                  mem=self.mem, 
+                                  memory=self.memory, 
                                   jobname=self.jobname, 
                                   follow_up_script=self.follow_up_script)
 
@@ -173,12 +170,12 @@ class SparkJob(object):
         jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
         return jobid
 
-    def kill(self): 
-        """Kill the current job"""
-        self._kill(self.jobid)
+    def stop(self): 
+        """Stop the current job"""
+        self._stop(self.jobid)
 
     @classmethod
-    def _kill(cls, jobid):
+    def _stop(cls, jobid):
         out = subprocess.check_output([cls._kill_command, jobid])
         print(out)
 
@@ -221,15 +218,15 @@ class LSFSparkJob(SparkJob):
 
 _sparkjob_registry = {'lsf': LSFSparkJob}
 
-def start_cluster(mem, timeout=30):
+def start_cluster(memory, timeout=30):
     """Start the spark cluster"""
 
     home_dir = os.environ['HOME']
     spark_dir = os.environ.get('SPARK_HOME','{home_dir}/spark'.format(home_dir=home_dir))
     spark_sbin = spark_dir + '/sbin'
 
-    os.environ['SPARK_EXECUTOR_MEMORY'] = '%dM'%mem
-    os.environ['SPARK_WORKER_MEMORY'] = '%dM'%mem
+    os.environ['SPARK_EXECUTOR_MEMORY'] = '%s'%memory
+    os.environ['SPARK_WORKER_MEMORY'] = '%s'%memory
     
     env = os.environ
     

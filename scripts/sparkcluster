@@ -22,17 +22,15 @@ def cli(ctx, scheduler):
 @click.option('--walltime', default="00:30", help="Walltime in HH:MM format")
 @click.option('--jobname', default='spark', help='Name to use for the job')
 @click.option('--template', default=None, help='Job template path')
-@click.option('--driver-memory', default='2G', help='Spark driver memory', envvar='SPARK_DRIVER_MEMORY')
-@click.option('--executor-memory', default='2G', help='Spark executor memory', envvar='SPARK_EXECUTOR_MEMORY')
+@click.option('--memory', default='2000', help='Memory for each worker in MB', envvar='SPARK_WORKER_MEMORY')
 @click.option('--wait/--no-wait', default=False, help='Wait until the job starts')
 @click.pass_context
-def submit(ctx, ncores, walltime, jobname, template, driver_memory, executor_memory, wait):
+def submit(ctx, ncores, walltime, jobname, template, memory, wait):
     """Submit the spark cluster as an LSF job"""
     
     SJ = ctx.obj['SJ']
 
-    sj = SJ(ncores=ncores, walltime=walltime, jobname=jobname, template=template,
-            driver_memory=driver_memory, executor_memory=executor_memory)
+    sj = SJ(ncores=ncores, walltime=walltime, jobname=jobname, template=template, memory=memory)
     
     if wait: 
         print('Waiting for job to start - ctrl-c to stop')
@@ -64,21 +62,22 @@ def info(ctx):
 @cli.command()
 @click.argument('clusterid')
 @click.pass_context
-def kill(ctx, clusterid):
+def stop(ctx, clusterid):
     """Kill a currently running cluster ('all' to kill all clusters)"""
     SJ = ctx.obj['SJ']
     sjs = SJ.current_clusters()
 
     if clusterid == 'all': 
         for sj in sjs: 
-            sj.kill()
+            sj.stop()
     elif int(clusterid) < len(sjs): 
-        sjs[int(clusterid)].kill()
+        sjs[int(clusterid)].stop()
     else: 
         raise RuntimeError('Cluster %s does not exist'%clusterid)
 
+
 @cli.command()
-@click.option('--mem', default=2000, help='Memory in MB')
+@click.option('--memory', default='2000', help='Memory for each worker in MB')
 @click.pass_context
 def start(ctx, mem):
     """Start the Spark cluster within a current job context"""

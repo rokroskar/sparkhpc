@@ -4,6 +4,8 @@
 
 ### Command line
 
+#### Get usage info
+
 ```
 $ sparkcluster
 Usage: sparkcluster [OPTIONS] COMMAND [ARGS]...
@@ -17,19 +19,42 @@ Commands:
   kill    Kill a currently running cluster
   submit  Submit the spark cluster as an LSF job
 
+$ sparkcluster submit --help
+Usage: sparkcluster submit [OPTIONS] NCORES
+
+  Submit the spark cluster as an LSF job
+
+Options:
+  --walltime TEXT         Walltime in HH:MM format
+  --jobname TEXT          Name to use for the job
+  --template TEXT         Job template path
+  --driver-memory TEXT    Spark driver memory
+  --executor-memory TEXT  Spark executor memory
+  --wait / --no-wait      Wait until the job starts
+  --help                  Show this message and exit.
+```
+
+#### Submit a cluster
+```
 $ sparkcluster submit 10
 
 $ sparkcluster info
 ----- Cluster 0 -----
 Job 31454252 yet started
+```
 
+#### Get information about running clusters
+```
 $ sparkcluster info
 ----- Cluster 0 -----
 Number of cores: 4
 master URL: spark://10.11.12.13:7077
 Spark UI: http://10.11.12.13:8080
+```
 
-$ sparkcluster kill 0
+#### Stop running clusters
+```
+$ sparkcluster stop 0
 Job <31463649> is being terminated
 ```
 

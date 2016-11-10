@@ -3,7 +3,7 @@
 #BSUB -W {walltime} # runtime to request
 #BSUB -o spark-ngs-%J.log # output extra o means overwrite
 #BSUB -n {ncores} # requesting ncores cores
-#BSUB -R "span[hosts=-1] rusage[mem={mem}]" # take any available core with mem GB of memory
+#BSUB -R "span[hosts=-1] rusage[mem={memory}]" # take any available core with mem GB of memory
 
 # setup the spark paths
 export SPARK_HOME=$HOME/spark
@@ -11,6 +11,4 @@ export SPARK_LOCAL_DIRS="$__LSF_JOB_TMPDIR__, /scratch/spark-${{USER}}"
 export LOCAL_DIRS="$__LSF_JOB_TMPDIR__, /scratch/spark-${{USER}}"
 export SPARK_WORKER_DIR="$__LSF_JOB_TMPDIR__/work, /scratch/spark-${{USER}}/work"
 
-sparkcluster start --mem {mem}
-
-
+sparkcluster start --memory {memory}M
