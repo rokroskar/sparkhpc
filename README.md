@@ -92,7 +92,7 @@ A simple LSF job template is included in the distribution. If you want to use yo
 
 ## Using other schedulers
 
-Currently only LSF is supported. However, adding support for other schedulers is rather straightforward (see the `LSFSparkCluster` implementation for an example). 
+Currently only LSF is supported. However, adding support for other schedulers is rather straightforward (see the `LSFSparkCluster` implementation for an example). Please submit a pull request if you implement a new scheduler or get in touch if you need help!
 
 To implement support for a new scheduler you should subclass `SparkCluster`. You must define the following *class* variables: 
 
