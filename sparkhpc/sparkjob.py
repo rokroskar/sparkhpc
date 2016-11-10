@@ -43,11 +43,11 @@ class SparkJob(object):
 
     To implement other schedulers, you must simply define some class variables: 
 
-    * `peek_command` (command to get stdout of current job)
-    * `submit_string` (command to submit a job to the scheduler)
-    * `job_regex` (regex to get the job ID from return string of submit command)
-    * `kill_command` (scheduler command to kill a job)
-    * `get_current_jobs` (scheduler command to return jobid, status, jobname one job per line)
+    * `_peek_command` (command to get stdout of current job)
+    * `_submit_command` (command to submit a job to the scheduler)
+    * `_job_regex` (regex to get the job ID from return string of submit command)
+    * `_kill_command` (scheduler command to kill a job)
+    * `_get_current_jobs` (scheduler command to return jobid, status, jobname one job per line)
     
 
     See the LSFSparkJob class for an example.
