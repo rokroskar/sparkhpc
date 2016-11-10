@@ -35,7 +35,7 @@ Options:
   --template TEXT     Job template path
   --memory TEXT       Memory for each worker in MB
   --spark-home TEXT   Location of the Spark distribution
-  --wait / --no-wait  Wait until the job starts
+  --wait              Wait until the job starts
   --help              Show this message and exit.
 ```
 

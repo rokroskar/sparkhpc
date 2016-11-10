@@ -29,7 +29,7 @@ def cli(ctx, scheduler):
               help='Memory for each worker in MB')
 @click.option('--spark-home', default=os.path.join(home,'spark'), envvar='SPARK_HOME', 
               help='Location of the Spark distribution')
-@click.option('--wait/--no-wait', default=False, help='Wait until the job starts')
+@click.option('--wait', default=False, is_flat=True, help='Wait until the job starts')
 @click.pass_context
 def start(ctx, ncores, walltime, jobname, template, memory, spark_home, wait):
     """Start the spark cluster as a batch job"""
