@@ -85,7 +85,7 @@ def stop(ctx, clusterid):
 @cli.command()
 @click.option('--memory', default='2000', help='Memory for each worker in MB')
 @click.pass_context
-def launch(ctx, mem):
+def launch(ctx, memory):
     """Launch the Spark master and workers within a current job context"""
     sparkjob.start_cluster(mem)
 
