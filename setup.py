@@ -6,6 +6,6 @@ setup(name="sparkhpc",
       author_email="roskar@ethz.ch",
       package_dir={'sparkhpc/':''},
       packages=['sparkhpc'],
-      scripts=['scripts/sparkcluster', 'scripts/start_notebook.py'],
+      scripts=['scripts/sparkcluster', 'scripts/hpcnotebook'],
       include_package_data=True
 )

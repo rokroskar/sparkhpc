@@ -9,6 +9,9 @@ from __future__ import print_function
 import click
 from sparkhpc import sparkjob
 import subprocess
+import os
+
+home = os.path.expanduser('~')
 
 @click.group()
 @click.option('--scheduler', type=click.Choice(['lsf']), default='lsf', help='Which scheduler to use')
@@ -20,17 +23,20 @@ def cli(ctx, scheduler):
 @cli.command()
 @click.argument('ncores')
 @click.option('--walltime', default="00:30", help="Walltime in HH:MM format")
-@click.option('--jobname', default='spark', help='Name to use for the job')
+@click.option('--jobname', default='sparkcluster', help='Name to use for the job')
 @click.option('--template', default=None, help='Job template path')
-@click.option('--memory', default='2000', help='Memory for each worker in MB', envvar='SPARK_WORKER_MEMORY')
+@click.option('--memory', default='2000', envvar='SPARK_WORKER_MEMORY',
+              help='Memory for each worker in MB')
+@click.option('--spark-home', default=os.path.join(home,'spark'), envvar='SPARK_HOME', 
+              help='Location of the Spark distribution')
 @click.option('--wait/--no-wait', default=False, help='Wait until the job starts')
 @click.pass_context
-def submit(ctx, ncores, walltime, jobname, template, memory, wait):
-    """Submit the spark cluster as an LSF job"""
+def start(ctx, ncores, walltime, jobname, template, memory, spark_home, wait):
+    """Start the spark cluster as a batch job"""
     
     SJ = ctx.obj['SJ']
 
-    sj = SJ(ncores=ncores, walltime=walltime, jobname=jobname, template=template, memory=memory)
+    sj = SJ(ncores=ncores, walltime=walltime, jobname=jobname, template=template, memory=memory, spark_home=spark_home)
     
     if wait: 
         print('Waiting for job to start - ctrl-c to stop')
@@ -79,8 +85,8 @@ def stop(ctx, clusterid):
 @cli.command()
 @click.option('--memory', default='2000', help='Memory for each worker in MB')
 @click.pass_context
-def start(ctx, mem):
-    """Start the Spark cluster within a current job context"""
+def launch(ctx, mem):
+    """Launch the Spark master and workers within a current job context"""
     sparkjob.start_cluster(mem)
 
 if __name__ == "__main__":

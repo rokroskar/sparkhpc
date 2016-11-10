@@ -36,18 +36,18 @@ Options:
 
 #### Submit a cluster
 ```
-$ sparkcluster submit 10
-
-$ sparkcluster info
------ Cluster 0 -----
-Job 31454252 yet started
+$ sparkcluster start 10
 ```
 
 #### Get information about running clusters
 ```
 $ sparkcluster info
 ----- Cluster 0 -----
-Number of cores: 4
+Job 31454252 yet started
+
+$ sparkcluster info
+----- Cluster 0 -----
+Number of cores: 10
 master URL: spark://10.11.12.13:7077
 Spark UI: http://10.11.12.13:8080
 ```
@@ -68,9 +68,7 @@ sj = sparkhpc.LSFSparkJob(ncores=10)
 
 sj.wait_to_start()
 
-master = sj.master_url(sj.jobid)
-
-sc = pyspark.SparkContext(master=master)
+sc = pyspark.SparkContext(master=sj.master_url())
 
 sc.parallelize(...)
 ```
@@ -83,14 +81,40 @@ $ python setup.py install
 
 This will install the python package to your default package directory as well as the `sparkcluster` command-line script. 
 
+### Job templates
+
+A simple LSF job template is included in the distribution. If you want to use your own template, you can specify the path using the `--template` flag to `start`. See the [included template](sparkhpc/templates/sparkjob.lsf.template) for an example. Note that the variable names in curly braces, e.g. `{jobname}` will be used to inject runtime parameters. Currently you must specify `walltime`, `ncores`, `memory`, `jobname`, and `spark_home`. If you want to significantly alter the job submission, the best would be to subclass the relevant scheduler class (e.g. `LSFSparkCluster`) and override the `submit` method. 
+
+## Using other schedulers
+
+Currently only LSF is supported. However, adding support for other schedulers is rather straightforward (see the `LSFSparkCluster` implementation for an example). 
+
+To implement support for a new scheduler you should subclass `SparkCluster`. You must define the following *class* variables: 
+
+* `_peek_command` (command to get stdout of current job)
+* `_submit_command` (command to submit a job to the scheduler)
+* `_job_regex` (regex to get the job ID from return string of submit command)
+* `_kill_command` (scheduler command to kill a job)
+* `_get_current_jobs` (scheduler command to return jobid, status, jobname one job per line)
+
+Note that `_get_current_jobs` should return a custom formatted string where the output looks like this: 
+
+```
+JOB_NAME STAT JOBID
+sparkcluster PEND 31610738
+sparkcluster PEND 31610739
+sparkcluster PEND 31610740
+```
+
 
 ## Spark jupyter notebook
 
 Running Spark applications, especially with python, is really nice from the comforts of a [Jupyter notebook](http://jupyter.org/).
-The `start_notebook.py` script will setup and launch a secure, password-protected notebook for you. The first time you run the notebook
-script, you should run it with the `--setup` flag. It will first ask for a password for the notebook and generate a self-signed ssh
-certificate - this is done to prevent other users of your cluster to stumble into your notebook by chance. To get some usage information
-just type
+This package includes the  `hpcnotebook` script, which  will setup and launch a secure, password-protected notebook for you.  
+
+### Setup
+Before launching the notebook, it needs to be configured. The script will first ask for a password for the notebook and generate a self-signed ssh
+certificate - this is done to prevent other users of your cluster to stumble into your notebook by chance. 
 
 ```
 $ ./start_notebook.py

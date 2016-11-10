@@ -55,13 +55,14 @@ class SparkJob(object):
 
     def __init__(self, 
                 jobid=None,
-                jobname='spark', 
+                jobname='sparkcluster', 
                 ncores='4', 
                 walltime='00:30', 
                 template=None, 
                 memory='2000', 
                 config_dir=None, 
-                follow_up_script=""):
+                follow_up_script="",
+                spark_home=None):
         
         # try to load JSON data for the job
         if jobid is not None: 
@@ -81,7 +82,8 @@ class SparkJob(object):
                           'jobname': jobname,
                           'follow_up_script': follow_up_script, 
                           'jobid': jobid,
-                          'status': None
+                          'status': None,
+                          'spark_home': spark_home
                           }
 
     def __getattr__(self, val): 
@@ -150,12 +152,11 @@ class SparkJob(object):
             with open(self.template, 'r') as template_file: 
                 template_str = template_file.read()
 
-        print template_str
         job = template_str.format(walltime=self.walltime, 
                                   ncores=self.ncores, 
                                   memory=self.memory, 
                                   jobname=self.jobname, 
-                                  follow_up_script=self.follow_up_script)
+                                  spark_home=self.spark_home)
 
         with open('job', 'w') as jobfile: 
             jobfile.write(job)
@@ -166,7 +167,7 @@ class SparkJob(object):
     @classmethod
     def _submit_job(cls, jobfile): 
         """Submits the jobfile and returns the job ID"""
-        job_submit = subprocess.Popen(cls._submit_string%jobfile, shell=True, stdout=subprocess.PIPE)
+        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, stdout=subprocess.PIPE)
         jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
         return jobid
 
@@ -209,7 +210,7 @@ class SparkJob(object):
 class LSFSparkJob(SparkJob):
     """Class for submitting spark jobs with the LSF scheduler"""
     _peek_command = 'bpeek'
-    _submit_string = 'bsub < %s'
+    _submit_command = 'bsub < %s'
     _job_regex = 'Job <(\d+)>'
     _kill_command = 'bkill'
     _get_current_jobs = 'bjobs -o "job_name stat jobid"'
@@ -218,12 +219,13 @@ class LSFSparkJob(SparkJob):
 
 _sparkjob_registry = {'lsf': LSFSparkJob}
 
-def start_cluster(memory, timeout=30):
+def start_cluster(memory, timeout=30, spark_home=None):
     """Start the spark cluster"""
 
     home_dir = os.environ['HOME']
-    spark_dir = os.environ.get('SPARK_HOME','{home_dir}/spark'.format(home_dir=home_dir))
-    spark_sbin = spark_dir + '/sbin'
+    if spark_home is None: 
+        spark_home = os.environ.get('SPARK_HOME','{home_dir}/spark'.format(home_dir=home_dir))
+    spark_sbin = spark_home + '/sbin'
 
     os.environ['SPARK_EXECUTOR_MEMORY'] = '%s'%memory
     os.environ['SPARK_WORKER_MEMORY'] = '%s'%memory
