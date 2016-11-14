@@ -5,7 +5,7 @@
 # Author: Rok Roskar, ETH Zuerich, 2016
 #
 #
-
+from __future__ import print_function
 import subprocess
 import time
 import re
@@ -73,24 +73,25 @@ class SparkJob(object):
                     self.prop_dict = json.load(f)
             except Exception as e: 
                 raise(e)
+        else:
+            if spark_home is None: 
+                spark_home = os.environ.get('SPARK_HOME', os.path.join(os.path.expanduser('~'),'spark'))   
+                if not os.path.exists(spark_home):
+                    raise RuntimeError('Please make sure you either put spark in ~/spark or set the SPARK_HOME environment variable.')
 
-        if spark_home is None: 
-            spark_home = os.environ.get('SPARK_HOME', os.path.join(os.path.expanduser('~'),'spark'))   
-            if not os.path.exists(spark_home):
-                raise RuntimeError('Please make sure you either put spark in ~/spark or set the SPARK_HOME environment variable.')
+            # save the properties in a dictionary
+            self.prop_dict = {'ncores': ncores,
+                              'walltime': walltime,
+                              'template': template,
+                              'memory': memory,
+                              'config_dir': config_dir,
+                              'jobname': jobname,
+                              'follow_up_script': follow_up_script, 
+                              'jobid': jobid,
+                              'status': None,
+                              'spark_home': spark_home
+                              }
 
-        # save the properties in a dictionary
-        self.prop_dict = {'ncores': ncores,
-                          'walltime': walltime,
-                          'template': template,
-                          'memory': memory,
-                          'config_dir': config_dir,
-                          'jobname': jobname,
-                          'follow_up_script': follow_up_script, 
-                          'jobid': jobid,
-                          'status': None,
-                          'spark_home': spark_home
-                          }
 
     def __getattr__(self, val): 
         if val in self.prop_dict: 
@@ -129,7 +130,7 @@ class SparkJob(object):
                 raise RuntimeError('Unable to obtain information about Spark master -- are you sure it is running?')
             return master_url[0]
         else: 
-            print 'Job %s not yet started'%jobid
+            print('Job %s not yet started'%jobid)
 
 
     def master_ui(self): 
@@ -146,7 +147,7 @@ class SparkJob(object):
                 raise RuntimeError('Unable to obtain information about Spark master -- are you sure it is running?')
             return master_ui[0]
         else: 
-            print 'Job %s not yet started'%jobid
+            print('Job %s not yet started'%jobid)
 
     def submit(self): 
         """Write job file to current working directory and submit to the scheduler"""
@@ -167,7 +168,7 @@ class SparkJob(object):
         with open('job', 'w') as jobfile: 
             jobfile.write(job)
 
-        self.jobid = self._submit_job('job')
+        self.prop_dict['jobid'] = self._submit_job('job')
         self._dump_to_json()
 
     @classmethod
@@ -203,7 +204,7 @@ class SparkJob(object):
         command = shlex.split(cls._get_current_jobs)
         sparkjob_files = glob.glob(os.path.join(os.path.expanduser('~'),'.sparkhpc*'))
         lsfjobs = subprocess.check_output(command)
-        jobids = set(map(lambda s: s.split()[2], lsfjobs.split('\n')[1:-1]))
+        jobids = set([s.split()[2] for s in lsfjobs.split('\n')[1:-1]])
 
         sjs = []
         for fname in sparkjob_files: 
@@ -239,7 +240,7 @@ def start_cluster(memory, timeout=30, spark_home=None):
     
     # Start the master
     master_command = os.path.join(spark_sbin, 'start-master.sh')
-    print master_command
+    print(master_command)
     master_out = subprocess.check_output(master_command, env=env)
 
     master_log = master_out.split('logging to ')[1].rstrip()
@@ -259,14 +260,14 @@ def start_cluster(memory, timeout=30, spark_home=None):
                 subprocess.call('{spark_sbin}/stop_master.sh'.format(spark_sbin=spark_sbin))
                 raise RuntimeError('Spark master appears to not be starting -- check the logs at: %s'%master_log)
 
-    print '['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master running at %s'%master_url
-    print '['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master UI available at %s'%master_webui
+    print('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master running at %s'%master_url)
+    print('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master UI available at %s'%master_webui)
 
     sys.stdout.flush()
 
     # Start the workers
     slaves_template ="mpirun {0}/start-slave.sh {1} -c 1"
     slaves_command = slaves_template.format(spark_sbin, master_url)
-    print slaves_command
+    print(slaves_command)
     p = subprocess.Popen(shlex.split(slaves_command), env = env)
     p.wait()
