@@ -69,7 +69,7 @@ Job <31463649> is being terminated
 import sparkhpc
 import pyspark
 
-sj = sparkhpc.LSFSparkJob(ncores=10)
+sj = sparkhpc.sparkjob.LSFSparkJob(ncores=10)
 
 sj.wait_to_start()
 
