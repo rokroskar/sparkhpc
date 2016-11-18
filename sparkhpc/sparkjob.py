@@ -18,6 +18,7 @@ import sys
 import pkg_resources 
 import logging
 
+
 class bc:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -155,6 +156,10 @@ class SparkJob(object):
 
     def submit(self): 
         """Write job file to current working directory and submit to the scheduler"""
+        # check that the user has setup the java environment
+        if 'JAVA_HOME' not in os.environ:
+            raise RuntimeError('JAVA_HOME not set - please set it to the location of your java installation')
+
         if self.jobid is not None: 
             raise RuntimeError("This SparkJob instance has already submitted a job; you must create a separate instance for a new job")
 
