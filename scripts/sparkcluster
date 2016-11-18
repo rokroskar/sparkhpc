@@ -10,6 +10,10 @@ import click
 from sparkhpc import sparkjob
 import subprocess
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('sparkhpc')
 
 home = os.path.expanduser('~')
 
@@ -39,7 +43,7 @@ def start(ctx, ncores, walltime, jobname, template, memory, spark_home, wait):
     sj = SJ(ncores=ncores, walltime=walltime, jobname=jobname, template=template, memory=memory, spark_home=spark_home)
     
     if wait: 
-        print('Waiting for job to start - ctrl-c to stop')
+        logger.info(' Waiting for job to start - ctrl-c to stop')
         sj.wait_to_start()
     else:
         sj.submit()
@@ -74,6 +78,8 @@ def stop(ctx, clusterid):
     sjs = SJ.current_clusters()
 
     if clusterid == 'all': 
+        if len(sjs) == 0: 
+            logger.info(' No clusters running')
         for sj in sjs: 
             sj.stop()
     elif int(clusterid) < len(sjs): 

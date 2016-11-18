@@ -16,6 +16,7 @@ import glob
 import shlex
 import sys
 import pkg_resources 
+import logging
 
 class bc:
     HEADER = '\033[95m'
@@ -37,6 +38,9 @@ def sparkjob_factory(scheduler):
         raise RuntimeError('Scheduler %s not supported'%scheduler)
 
 home_dir = os.path.expanduser('~')
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('sparkhpc')
 
 class SparkJob(object): 
     """
@@ -130,7 +134,7 @@ class SparkJob(object):
                 raise RuntimeError('Unable to obtain information about Spark master -- are you sure it is running?')
             return master_url[0]
         else: 
-            print('Job %s not yet started'%jobid)
+            logger.info('Job %s not yet started'%jobid)
 
 
     def master_ui(self): 
@@ -147,10 +151,13 @@ class SparkJob(object):
                 raise RuntimeError('Unable to obtain information about Spark master -- are you sure it is running?')
             return master_ui[0]
         else: 
-            print('Job %s not yet started'%jobid)
+            logger.info('Job %s not yet started'%jobid)
 
     def submit(self): 
         """Write job file to current working directory and submit to the scheduler"""
+        if self.jobid is not None: 
+            raise RuntimeError("This SparkJob instance has already submitted a job; you must create a separate instance for a new job")
+
         if self.template is None: 
             templates = {LSFSparkJob: 'sparkjob.lsf.template'}
             template_file = templates[self.__class__]
@@ -171,12 +178,16 @@ class SparkJob(object):
         self.prop_dict['jobid'] = self._submit_job('job')
         self._dump_to_json()
 
+        sjs = self.current_clusters()
+        logger.info('Submitted cluster %d'%(len(sjs)-1))
+
     @classmethod
     def _submit_job(cls, jobfile): 
         """Submits the jobfile and returns the job ID"""
-        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, stdout=subprocess.PIPE)
+        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
         return jobid
+
 
     def stop(self): 
         """Stop the current job"""
@@ -184,8 +195,8 @@ class SparkJob(object):
 
     @classmethod
     def _stop(cls, jobid):
-        out = subprocess.check_output([cls._kill_command, jobid])
-        print(out)
+        out = subprocess.check_output([cls._kill_command, jobid], stderr=subprocess.STDOUT)
+        logger.info(out)
 
     def job_started(self): 
         """Check whether the job is running already or not"""
@@ -203,7 +214,7 @@ class SparkJob(object):
         """Determine which Spark clusters are currently running or in the queue"""
         command = shlex.split(cls._get_current_jobs)
         sparkjob_files = glob.glob(os.path.join(os.path.expanduser('~'),'.sparkhpc*'))
-        lsfjobs = subprocess.check_output(command)
+        lsfjobs = subprocess.check_output(command, stderr=subprocess.STDOUT)
         jobids = set([s.split()[2] for s in lsfjobs.split('\n')[1:-1]])
 
         sjs = []
@@ -240,7 +251,7 @@ def start_cluster(memory, timeout=30, spark_home=None):
     
     # Start the master
     master_command = os.path.join(spark_sbin, 'start-master.sh')
-    print(master_command)
+    logger.debug('master command: ' + master_command)
     master_out = subprocess.check_output(master_command, env=env)
 
     master_log = master_out.split('logging to ')[1].rstrip()
@@ -260,14 +271,14 @@ def start_cluster(memory, timeout=30, spark_home=None):
                 subprocess.call('{spark_sbin}/stop_master.sh'.format(spark_sbin=spark_sbin))
                 raise RuntimeError('Spark master appears to not be starting -- check the logs at: %s'%master_log)
 
-    print('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master running at %s'%master_url)
-    print('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master UI available at %s'%master_webui)
+    logger.info('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master running at %s'%master_url)
+    logger.info('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master UI available at %s'%master_webui)
 
     sys.stdout.flush()
 
     # Start the workers
     slaves_template ="mpirun {0}/start-slave.sh {1} -c 1"
     slaves_command = slaves_template.format(spark_sbin, master_url)
-    print(slaves_command)
+    logger.debug('slaves command: ' + slaves_command)
     p = subprocess.Popen(shlex.split(slaves_command), env = env)
     p.wait()
