@@ -66,10 +66,12 @@ Job <31463649> is being terminated
 ### Python code
 
 ```python
-import sparkhpc
+from sparkhpc.sparkjob import LSFSparkJob
+import findspark 
+findspark.init() # this sets up the paths required to find spark libraries
 import pyspark
 
-sj = sparkhpc.LSFSparkJob(ncores=10)
+sj = LSFSparkJob(ncores=10)
 
 sj.wait_to_start()
 
@@ -85,6 +87,18 @@ $ python setup.py install
 ```
 
 This will install the python package to your default package directory as well as the `sparkcluster` command-line script. 
+
+## Dependencies
+### Python
+* [click](http://click.pocoo.org/5/)
+* [findspark](https://github.com/minrk/findspark) 
+
+These are installable via `pip install`.
+
+### System configuration
+* Spark installation in `~/spark` OR wherever `SPARK_HOME` points to
+* java distribution (set `JAVA_HOME`)
+* `mpirun` in your path
 
 ### Job templates
 
