@@ -17,7 +17,7 @@ import shlex
 import sys
 import pkg_resources 
 import logging
-
+import signal
 
 class bc:
     HEADER = '\033[95m'
@@ -97,6 +97,7 @@ class SparkJob(object):
                               'spark_home': spark_home
                               }
 
+        signal.signal(signal.SIGINT, self._sigint_handler)
 
     def __getattr__(self, val): 
         if val in self.prop_dict: 
@@ -230,6 +231,13 @@ class SparkJob(object):
         
         return sjs
 
+    def _sigint_handler(self, signal, frame): 
+        """Handle ctrl-c from the user"""
+        self.stop()
+        sys.exit(0)
+
+
+
 class LSFSparkJob(SparkJob):
     """Class for submitting spark jobs with the LSF scheduler"""
     _peek_command = 'bpeek'
@@ -287,3 +295,5 @@ def start_cluster(memory, timeout=30, spark_home=None):
     logger.debug('slaves command: ' + slaves_command)
     p = subprocess.Popen(shlex.split(slaves_command), env = env)
     p.wait()
+
+
