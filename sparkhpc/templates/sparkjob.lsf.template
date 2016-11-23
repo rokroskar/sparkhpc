@@ -7,8 +7,8 @@
 
 # setup the spark paths
 export SPARK_HOME={spark_home}
-export SPARK_LOCAL_DIRS="$__LSF_JOB_TMPDIR__, /scratch/spark-${{USER}}"
-export LOCAL_DIRS="$__LSF_JOB_TMPDIR__, /scratch/spark-${{USER}}"
-export SPARK_WORKER_DIR="$__LSF_JOB_TMPDIR__/work, /scratch/spark-${{USER}}/work"
+export SPARK_LOCAL_DIRS="$__LSF_JOB_TMPDIR__,/scratch/spark-${{USER}}"
+export LOCAL_DIRS="$__LSF_JOB_TMPDIR__,/scratch/spark-${{USER}}"
+export SPARK_WORKER_DIR="$__LSF_JOB_TMPDIR__/work,/scratch/spark-${{USER}}/work"
 
 sparkcluster launch --memory {memory}M
