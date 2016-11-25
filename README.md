@@ -75,10 +75,14 @@ sj = LSFSparkJob(ncores=10)
 
 sj.wait_to_start()
 
-sc = pyspark.SparkContext(master=sj.master_url())
+sc = pyspark.SparkContext(master=sj.master_url)
 
 sc.parallelize(...)
 ```
+
+### Jupyter notebook
+
+All the same applies in the notebook as for regular python code, except that you get nicely formatted output when running `sj.show_clusters()`.
 
 ## Installation
 
@@ -162,4 +166,4 @@ To access the notebook, inspect the output below for the port number, then point
 
 So in this case, you could set up a port forward to host `1.2.3.4` and instruct your browser to connect to `https://1.2.3.4:8889`.
 
-Inside the notebook, it is straightforward to set up the `SparkContext` using the `sparkhpc` package (see above).
+Inside the notebook, it is straightforward to set up the `SparkContext` using the `sparkhpc` package (see above). 

@@ -74,24 +74,64 @@ class SparkJob(object):
                     """
 
     def __init__(self, 
-                jobid=None,
                 clusterid=None,
-                jobname='sparkcluster', 
+                jobid=None,
                 ncores='4', 
-                walltime='00:30', 
+                walltime='00:30',
+                memory=2000, 
+                jobname='sparkcluster',  
                 template=None, 
-                memory='2000', 
                 config_dir=None, 
-                follow_up_script="",
                 spark_home=None):
+        """
+        Creates a SparkJob
         
+        Parameters
+        ----------
+
+        clusterid: int
+            if a spark cluster is already running, initialize this SparkJob with its metadata
+        jobid: int
+            same as `clusterid` but using directly the scheduler job ID
+        ncores: int
+            number of cores to request
+        walltime: string
+            walltime in `HH:MM` format as a string
+        memory: int
+            memory to request per core in MB
+        jobname: string
+            name for the job - only used for the scheduler
+        template: file path
+            custom template to use for job submission
+        config_dir: directory path
+            path to spark configuration directory
+        spark_home: 
+            path to spark directory; default is the `SPARK_HOME` environment variable, 
+            and if it is not set it defaults to `~/spark`
+
+        Example usage
+        -------------
+
+            from sparkhpc.sparkjob import LSFSparkJob
+            import findspark 
+            findspark.init() # this sets up the paths required to find spark libraries
+            import pyspark
+
+            sj = LSFSparkJob(ncores=10)
+
+            sj.wait_to_start()
+
+            sc = pyspark.SparkContext(master=sj.master_url)
+
+            sc.parallelize(...)
+        """
         if clusterid is not None:
             sjs = self.current_clusters()
             if clusterid < len(sjs): 
                 jobid = sjs[clusterid].jobid
             else: 
                 logger.error('cluster %d does not exist'%clusterid)
-                
+
         # try to load JSON data for the job
         if jobid is not None: 
             jobid = str(jobid)
@@ -114,7 +154,6 @@ class SparkJob(object):
                               'memory': memory,
                               'config_dir': config_dir,
                               'jobname': jobname,
-                              'follow_up_script': follow_up_script, 
                               'jobid': jobid,
                               'status': None,
                               'spark_home': spark_home
@@ -125,6 +164,25 @@ class SparkJob(object):
     def _repr_html_(self): 
         table_header = "<tr>"+self.table_header+"</tr>"
         return table_header + self._to_string()
+
+
+    def _to_string(self): 
+        if self.job_started(): 
+            self.prop_dict['status'] = 'running'
+
+        if IPYTHON:
+            row = """
+                    <td>{jobid}</td>
+                    <td>{status}</td>
+                    <td><a target="_blank" href="{ui}">{ui}</a></td>
+                    <td>{url}</td>
+                  """
+            
+        else:
+            row = "Job id: {jobid}\nStatus: {status}\nSpark UI: {ui}\nSpark URL: {url}"
+
+        return row.format(jobid=self.jobid, status=self.status, ui=self.master_ui, url=self.master_url)
+
 
     def __getattr__(self, val): 
         if val in self.prop_dict: 
@@ -300,24 +358,7 @@ class SparkJob(object):
         
         return sjs
 
-    def _to_string(self): 
-        if self.job_started(): 
-            self.prop_dict['status'] = 'running'
-
-        if IPYTHON:
-            row = """
-                    <td>{jobid}</td>
-                    <td>{status}</td>
-                    <td><a target="_blank" href="{ui}">{ui}</a></td>
-                    <td>{url}</td>
-                  """
-            
-        else:
-            row = "Job id: {jobid}\nStatus: {status}\nSpark UI: {ui}\nSpark URL: {url}"
-
-        return row.format(jobid=self.jobid, status=self.status, ui=self.master_ui, url=self.master_url)
-
-
+    
     def show_clusters(self): 
         sjs = self.current_clusters()
 
