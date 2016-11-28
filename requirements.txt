@@ -1,0 +1,4 @@
+setuptools==20.10.1
+recommonmark==0.4.0
+ipython==5.1.0
+
