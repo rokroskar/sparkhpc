@@ -345,3 +345,12 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+from recommonmark.transform import AutoStructify
+
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+            'auto_toc_tree_section': 'Contents',
+            }, True)
+    app.add_transform(AutoStructify)
+
