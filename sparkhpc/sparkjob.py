@@ -68,6 +68,7 @@ class SparkJob(object):
 
     table_header = """
                     <th>Job ID</th>
+                    <th>Number of cores</th>
                     <th>Status</th>
                     <th>Spark UI</th>
                     <th>Spark URL</th>
@@ -173,15 +174,16 @@ class SparkJob(object):
         if IPYTHON:
             row = """
                     <td>{jobid}</td>
+                    <td>{ncores}</td>
                     <td>{status}</td>
                     <td><a target="_blank" href="{ui}">{ui}</a></td>
                     <td>{url}</td>
                   """
             
         else:
-            row = "Job id: {jobid}\nStatus: {status}\nSpark UI: {ui}\nSpark URL: {url}"
+            row = "Job id: {jobid}\nNumber of cores: {ncores}\nStatus: {status}\nSpark UI: {ui}\nSpark URL: {url}"
 
-        return row.format(jobid=self.jobid, status=self.status, ui=self.master_ui, url=self.master_url)
+        return row.format(jobid=self.jobid, ncores=self.ncores, status=self.status, ui=self.master_ui, url=self.master_url)
 
 
     def __getattr__(self, val): 
@@ -375,7 +377,7 @@ class SparkJob(object):
             else: 
                 for i,sj in enumerate(sjs): 
                     print('----- Cluster %d -----'%i)
-                    print(sj)
+                    print(self._to_string())
 
     def _sigint_handler(self, signal, frame): 
         """Handle ctrl-c from the user"""

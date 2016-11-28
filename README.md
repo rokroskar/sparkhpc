@@ -82,7 +82,7 @@ sc.parallelize(...)
 
 ### Jupyter notebook
 
-All the same applies in the notebook as for regular python code, except that you get nicely formatted output when running `sj.show_clusters()`.
+`sparkhpc` gives you nicely formatted info about your jobs and clusters in the jupyter notebook - see the [example notebook](./example.ipynb).
 
 ## Installation
 
