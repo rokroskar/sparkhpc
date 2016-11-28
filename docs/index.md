@@ -1,7 +1,22 @@
-`sparkhpc`: Spark on HPC clusters made easy
-===========================================
+# sparkhpc: Spark on HPC clusters made easy
 
 This package tries to greatly simplify deploying and managing [Apache Spark](http://spark.apache.org) clusters on HPC resources. 
+
+## Installation
+
+### From [pypi](https://pypi.python.org)
+
+```
+$ pip install sparkhpc
+```
+
+### From source
+
+```
+$ python setup.py install
+```
+
+This will install the python package to your default package directory as well as the `sparkcluster` and `hpcnotebook` command-line scripts. 
 
 ## Usage
 
@@ -85,15 +100,8 @@ sc.parallelize(...)
 
 `sparkhpc` gives you nicely formatted info about your jobs and clusters in the jupyter notebook - see the [example notebook](./example.ipynb).
 
-## Installation
-
-```
-$ python setup.py install
-```
-
-This will install the python package to your default package directory as well as the `sparkcluster` command-line script. 
-
 ## Dependencies
+
 ### Python
 * [click](http://click.pocoo.org/5/)
 * [findspark](https://github.com/minrk/findspark) 

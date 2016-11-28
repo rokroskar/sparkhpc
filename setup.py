@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="sparkhpc",
-      version='0.1',
+      version='0.1.post2',
       author="Rok Roskar",
       author_email="roskar@ethz.ch",
       url="http://sparkhpc.readthedocs.io",
@@ -10,6 +10,6 @@ setup(name="sparkhpc",
       packages=['sparkhpc'],
       scripts=['scripts/sparkcluster', 'scripts/hpcnotebook'],
       include_package_data=True,
-      install_requires=['click'],
+      install_requires=['click', 'findspark'],
       keywords=['pyspark', 'spark', 'hpc']
 )
