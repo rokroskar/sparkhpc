@@ -21,7 +21,7 @@ home = os.path.expanduser('~')
 @click.option('--scheduler', type=click.Choice(['lsf']), default='lsf', help='Which scheduler to use')
 @click.pass_context
 def cli(ctx, scheduler):
-    ctx.obj['SJ'] = sparkjob.sparkjob_factory(scheduler)
+    ctx.obj['SJ'] = sparkjob._sparkjob_factory(scheduler)
 
 
 @cli.command()

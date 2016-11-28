@@ -37,7 +37,7 @@ class bc:
     UNDERLINE = '\033[4m'
 
 
-def sparkjob_factory(scheduler): 
+def _sparkjob_factory(scheduler): 
     """Return the correct class for the given scheduler"""
 
     if scheduler in _sparkjob_registry:
