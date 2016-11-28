@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/sparkhpc/badge/?version=latest)](http://sparkhpc.readthedocs.io/en/latest/?badge=latest)
+
 # sparkhpc: Spark on HPC clusters made easy
 
 This package tries to greatly simplify deploying and managing [Apache Spark](http://spark.apache.org) clusters on HPC resources. 
