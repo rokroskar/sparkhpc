@@ -399,7 +399,22 @@ class LSFSparkJob(SparkJob):
 _sparkjob_registry = {'lsf': LSFSparkJob}
 
 def start_cluster(memory, timeout=30, spark_home=None):
-    """Start the spark cluster"""
+    """
+    Start the spark cluster
+
+    This is the script used to launch spark on the compute resources
+    assigned by the scheduler. 
+
+    Parameters
+    ----------
+
+    memory: string
+        memory specified using java memory format
+    timeout: int
+        time in seconds to wait for the master to respond
+    spark_home: directory path
+        path to base spark installation
+    """
 
     if spark_home is None: 
         spark_home = os.environ.get('SPARK_HOME', os.path.join(home_dir,'spark'))
