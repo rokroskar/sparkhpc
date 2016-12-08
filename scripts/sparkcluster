@@ -82,10 +82,11 @@ def stop(ctx, clusterid):
 
 @cli.command()
 @click.option('--memory', default='2000', help='Memory for each worker in MB')
+@click.option('--timeout', default=30, help='Timeout for starting spark master')
 @click.pass_context
-def launch(ctx, memory):
+def launch(ctx, memory, timeout):
     """Launch the Spark master and workers within a current job context"""
-    sparkjob.start_cluster(memory)
+    sparkjob.start_cluster(memory,timeout)
 
 if __name__ == "__main__":
     cli(obj={})

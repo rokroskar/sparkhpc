@@ -33,7 +33,7 @@ try :
         os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages {graphframes_package} pyspark-shell"\
                                             .format(graphframes_package=graphframes_package)
         
-        os.environ['SPARK_CONF_DIR'] = os.path.realpath('./spark_conf/')
+        os.environ['SPARK_CONF_DIR'] = os.path.realpath(spark_conf)
 
         os.environ['PYSPARK_PYTHON'] = sys.executable
 

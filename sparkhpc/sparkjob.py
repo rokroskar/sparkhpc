@@ -50,6 +50,7 @@ home_dir = os.path.expanduser('~')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('sparkhpc')
 
+
 class SparkJob(object): 
     """
     Generic SparkJob class
@@ -279,7 +280,6 @@ class SparkJob(object):
             raise RuntimeError("This SparkJob instance has already submitted a job; you must create a separate instance for a new job")
 
         if self.template is None: 
-            templates = {LSFSparkJob: 'sparkjob.lsf.template'}
             template_file = templates[self.__class__]
             template_str = pkg_resources.resource_string('sparkhpc', 'templates/%s'%template_file)
         else : 
@@ -307,7 +307,8 @@ class SparkJob(object):
     def _submit_job(cls, jobfile): 
         """Submits the jobfile and returns the job ID"""
 
-        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, 
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try: 
             jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
         except Exception as e: 
@@ -377,7 +378,7 @@ class SparkJob(object):
             else: 
                 for i,sj in enumerate(sjs): 
                     print('----- Cluster %d -----'%i)
-                    print(self._to_string())
+                    print(sj._to_string())
 
     def _sigint_handler(self, signal, frame): 
         """Handle ctrl-c from the user"""
@@ -395,7 +396,7 @@ class LSFSparkJob(SparkJob):
     _get_current_jobs = 'bjobs -o "job_name stat jobid"'
 
 
-
+templates = {LSFSparkJob: 'sparkjob.lsf.template'}
 _sparkjob_registry = {'lsf': LSFSparkJob}
 
 def start_cluster(memory, timeout=30, spark_home=None):
@@ -431,24 +432,28 @@ def start_cluster(memory, timeout=30, spark_home=None):
     master_out = subprocess.check_output(master_command, env=env)
 
     master_log = master_out.split('logging to ')[1].rstrip()
+    print(master_out)
+    print('MASTER LOG: '+ master_log)
 
     started = False
     start_time = time.time()
     while not started: 
         with open(master_log) as f: 
             log = f.read()
+            print(log)
         try : 
             master_url, master_webui = re.findall('(spark://\S+:\d{4}|http://\S+:\d{4})', log)
             started = True
         except ValueError: 
             if time.time() - start_time < timeout:
+                time.sleep(.5)
                 pass
             else:
-                subprocess.call('{spark_sbin}/stop_master.sh'.format(spark_sbin=spark_sbin))
+                subprocess.call('{spark_sbin}/stop-master.sh'.format(spark_sbin=spark_sbin))
                 raise RuntimeError('Spark master appears to not be starting -- check the logs at: %s'%master_log)
 
-    logger.info('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master running at %s'%master_url)
-    logger.info('['+bc.OKGREEN+'start_spark] '+bc.ENDC+'master UI available at %s'%master_webui)
+    logger.info('['+bc.OKGREEN+'start_cluster] '+bc.ENDC+'master running at %s'%master_url)
+    logger.info('['+bc.OKGREEN+'start_cluster] '+bc.ENDC+'master UI available at %s'%master_webui)
 
     sys.stdout.flush()
 
@@ -458,5 +463,7 @@ def start_cluster(memory, timeout=30, spark_home=None):
     logger.debug('slaves command: ' + slaves_command)
     p = subprocess.Popen(shlex.split(slaves_command), env = env)
     p.wait()
+
+
 
 
