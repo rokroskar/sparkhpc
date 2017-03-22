@@ -11,6 +11,37 @@ import shutil
 import click
 import pkg_resources
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('hpcnotebook')
+
+# try to figure out which scheduler we have
+def which(program):
+    import os
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+if which('bjobs') is not None: 
+    SCHEDULER = 'LSF'
+    HOST_ENVIRON = 'LSB_HOSTS'
+elif which('squeue') is not None: 
+    SCHEDULER = 'SLURM'
+    HOST_ENVIRON = 'SLURM_NODELIST'
+
 #
 # Initial inspiration for this script from https://github.com/felixcheung/vagrant-projects
 #
@@ -43,15 +74,6 @@ home = expanduser("~")
 # setup the path to the jupyter notebook configuration
 jupyter_config_path = "{home}/.jupyter_notebook".format(home=home)
 
-def which(name):
-    """helper function to find whether a command exists"""
-    found = 0 
-    for path in os.getenv("PATH").split(os.path.pathsep):
-        full_path = path + os.sep + name
-        if os.path.exists(full_path):
-            found = full_path
-    return found
-
 @click.group()
 @click.option('--port', default=8889, help='Port for the notebook server')
 @click.pass_context
@@ -75,13 +97,16 @@ def setup(ctx, force):
         # get a password
         from notebook.auth import passwd
         
-        print(bc.WARNING + '[hpcnotebook] '+bc.ENDC+'This script will create a Jupyter notebook profile for working remotely')
-        print(bc.WARNING + '[hpcnotebook] '+bc.ENDC+'When it is finished, you can find the configuration in %s\n'%(bc.UNDERLINE + jupyter_config_path + bc.ENDC))
-        print(bc.WARNING + '[hpcnotebook] '+bc.ENDC+'First, we need a *new* password for your Jupyter notebook\n')
+        logger.info("""
+            This script will create a Jupyter notebook profile for working remotely.
+            When it is finished, you can find the configuration in {conf_path}.
+            First, please enter a *new* password for your Jupyter notebook:
+            """.format(conf_path=bc.UNDERLINE + jupyter_config_path + bc.ENDC))
+        
         new_pass = passwd()
 
-        print(bc.WARNING + '[hpcnotebook] '+bc.ENDC+'Creating an SSL certificate to enable a secure connection; the certificate will be in your ~/.ssh directory\n')
-
+        logger.info("Creating an SSL certificate to enable a secure connection; the certificate will be in your ~/.ssh directory")
+        
         # make sure the .ssh directory is there before continuing
         sshdir = '{home}/.ssh'.format(home=home)
         if not os.path.exists(sshdir):
@@ -95,7 +120,7 @@ def setup(ctx, force):
 
         lines = out.split('\n')
         for l in lines : 
-            print(bc.OKGREEN + '[openssl] ' + bc.ENDC + l)
+            logger.info(bc.OKGREEN + '[openssl] ' + bc.ENDC + l)
         
         # write the notebook config
 
@@ -105,10 +130,10 @@ def setup(ctx, force):
             f.write(notebook_config_template.format(
                 password=new_pass, certfile=certfile, port=port))
         
-        print(bc.WARNING + '[hpcnotebook] '+ bc.BOLD + 'Notebook setup complete' + bc.ENDC)
+        logger.info(bc.BOLD + 'Notebook setup complete' + bc.ENDC)
             
     else:
-        print(bc.FAIL + "The jupyter notebook already looks set up; if you want to force setup, use --force".format(dir=jupyter_config_path) + bc.ENDC)
+        logger.error(bc.FAIL + "The jupyter notebook already looks set up; if you want to force setup, use --force".format(dir=jupyter_config_path) + bc.ENDC)
 
 @cli.command()
 @click.pass_context
@@ -127,11 +152,11 @@ def launch(ctx):
         conf_port = int(re.findall('port = (\d+)', conf.read())[0])
 
     if conf_port != port:
-        print(bc.WARNING + "Overriding the port found in the existing configuration" + bc.ENDC)
+        logger.warning(bc.WARNING + "Overriding the port found in the existing configuration" + bc.ENDC)
         argv.append('--port={port}'.format(port=port))
 
     # determine if we're running on a compute node
-    if 'LSB_HOSTS' in os.environ:
+    if HOST_ENVIRON in os.environ:
         compute = True
     else:
         compute = False
@@ -143,7 +168,7 @@ def launch(ctx):
     else:
         ip = 'localhost'
 
-    print(bc.BOLD + "To access the notebook, inspect the output below for the port number, then point your browser to https://{ip}:<port_number>".format(ip=ip) + bc.ENDC)
+    logger.info(bc.BOLD + "To access the notebook, inspect the output below for the port number, then point your browser to https://{ip}:<port_number>".format(ip=ip) + bc.ENDC)
     sys.stdout.flush()
     launch_new_instance()
 
@@ -156,10 +181,8 @@ def launch(ctx):
 @click.pass_context
 def submit(ctx, ncores, walltime, memory, template, jobname):
     """Submit a notebook job to the scheduler"""
-    if which('bsub'): 
-        scheduler='LSF'
-    else: 
-        raise RuntimeWarning('bsub not found and no other schedulers are supported')
+    if SCHEDULER != 'LSF':
+        raise RuntimeError('only the LSF scheduler is supported at the moment')
 
     if template is None: 
         template_file = templates[scheduler]

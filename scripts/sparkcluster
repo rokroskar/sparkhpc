@@ -17,8 +17,10 @@ logger = logging.getLogger('sparkhpc')
 
 home = os.path.expanduser('~')
 
+SCHEDULER = sparkjob.get_scheduler()
+
 @click.group()
-@click.option('--scheduler', type=click.Choice(['lsf', 'slurm']), default='lsf', help='Which scheduler to use')
+@click.option('--scheduler', type=click.Choice(['lsf', 'slurm']), default=SCHEDULER, help='Which scheduler to use')
 @click.pass_context
 def cli(ctx, scheduler):
     ctx.obj['SJ'] = sparkjob._sparkjob_factory(scheduler)
@@ -69,6 +71,8 @@ def stop(ctx, clusterid):
     SJ = ctx.obj['SJ']
     sjs = SJ.current_clusters()
 
+    for sj in sjs:
+        print(sj.prop_dict)
     if clusterid == 'all': 
         if len(sjs) == 0: 
             logger.info(' No clusters running')
@@ -81,12 +85,13 @@ def stop(ctx, clusterid):
 
 
 @cli.command()
-@click.option('--memory', default='2000', help='Memory for each worker in MB')
+@click.option('--memory', default='2000M', help='Memory for each worker in MB')
 @click.option('--timeout', default=30, help='Timeout for starting spark master')
+@click.option('--cores-per-executor', default=1, help='Number of cores per executor')
 @click.pass_context
-def launch(ctx, memory, timeout):
+def launch(ctx, memory, timeout, cores_per_executor):
     """Launch the Spark master and workers within a current job context"""
-    sparkjob.start_cluster(memory,timeout)
+    sparkjob.start_cluster(memory, timeout=timeout, cores_per_executor=cores_per_executor)
 
 if __name__ == "__main__":
     cli(obj={})
