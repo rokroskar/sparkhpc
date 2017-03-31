@@ -12,7 +12,7 @@ try :
                     spark_conf='./spark_conf', 
                     executor_memory=None,
                     profiling=False, 
-                    graphframes_package='graphframes:graphframes:0.2.0-spark2.0-s_2.11', 
+                    graphframes_package='graphframes:graphframes:0.3.0-spark2.0-s_2.11', 
                     extra_conf = None):
         """Launch a SparkContext 
         
