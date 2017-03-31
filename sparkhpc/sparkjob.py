@@ -396,8 +396,16 @@ class LSFSparkJob(SparkJob):
     _get_current_jobs = 'bjobs -o "job_name stat jobid"'
 
 
-templates = {LSFSparkJob: 'sparkjob.lsf.template'}
-_sparkjob_registry = {'lsf': LSFSparkJob}
+class SLURMSparkJob(SparkJob):
+    """Class for submitting spark jobs with the SLURM scheduler"""
+    _peek_command = ""
+    _submit_command = 'sbatch < %s'
+    _job_regex = ""
+    _kill_command = 'skill'
+    _get_current_jobs = 'squeue -o "%.j %.T %.i"'
+
+templates = {LSFSparkJob: 'sparkjob.lsf.template', SLURMSparkJob: 'sparkjob.slurm.template'}
+_sparkjob_registry = {'lsf': LSFSparkJob, 'slurm': SLURMSparkJob}
 
 def start_cluster(memory, timeout=30, spark_home=None):
     """

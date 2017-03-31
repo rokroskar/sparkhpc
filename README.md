@@ -66,7 +66,7 @@ $ sparkcluster start 10
 ```
 $ sparkcluster info
 ----- Cluster 0 -----
-Job 31454252 yet started
+Job 31454252 not yet started
 
 $ sparkcluster info
 ----- Cluster 0 -----
