@@ -27,7 +27,7 @@ def cli(ctx, scheduler):
 
 
 @cli.command()
-@click.argument('ncores')
+@click.argument('ncores', type=int)
 @click.option('--walltime', default="00:30", help="Walltime in HH:MM format")
 @click.option('--jobname', default='sparkcluster', help='Name to use for the job')
 @click.option('--template', default=None, help='Job template path')

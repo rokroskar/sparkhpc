@@ -114,7 +114,7 @@ class SparkJob(object):
     def __init__(self, 
                 clusterid=None,
                 jobid=None,
-                ncores='4',
+                ncores=4,
                 cores_per_executor=1, 
                 walltime='00:30',
                 memory=2000, 
@@ -328,7 +328,7 @@ class SparkJob(object):
                                   number_of_executors=self.ncores/self.cores_per_executor,
                                   memory=self.memory, 
                                   memory_per_executor=self.memory_per_executor,
-                                  memory_per_core=self.memory_per_executor/self.cores_per_executor,
+                                  memory_per_core=int(self.memory_per_executor)/int(self.cores_per_executor),
                                   jobname=self.jobname, 
                                   spark_home=self.spark_home)
 
