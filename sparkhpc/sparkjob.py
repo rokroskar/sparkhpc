@@ -19,6 +19,7 @@ import pkg_resources
 import logging
 import signal
 
+
 try: 
     get_ipython()
     IPYTHON=True
@@ -36,13 +37,6 @@ class bc:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-def _sparkjob_factory(scheduler): 
-    """Return the correct class for the given scheduler"""
-
-    if scheduler in _sparkjob_registry:
-        return _sparkjob_registry[scheduler]
-    else: 
-        raise RuntimeError('Scheduler %s not supported'%scheduler)
 
 # try to figure out which scheduler we have
 def which(program):
@@ -84,14 +78,15 @@ elif SCHEDULER == 'lsf':
 home_dir = os.path.expanduser('~')
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('sparkhpc')
+logger = logging.getLogger('sparkhpc.sparkjob')
 
 
 class SparkJob(object): 
     """
     Generic SparkJob class
 
-    To implement other schedulers, you must simply define some class variables: 
+    To implement other schedulers, you must simply extend this class 
+    and define some class variables: 
 
     * `_peek_command` (command to get stdout of current job)
     * `_submit_command` (command to submit a job to the scheduler)
@@ -276,13 +271,17 @@ class SparkJob(object):
             time.sleep(1)
 
 
+    def _peek(self): 
+        """helper function to get the job output; needs to be overriden by subclasses"""
+        pass
+
     def _get_master(self, jobid, regex = None, timeout=60):
         """Retrieve the spark master address for jobid"""
 
         if self._job_started(jobid): 
             timein = time.time()
             while time.time() - timein < timeout:
-                job_peek = subprocess.check_output([self._peek_command, str(jobid)])
+                job_peek = self._peek()
                 master_url = re.findall(regex, job_peek)
                 if len(master_url) > 0: 
                     break
@@ -294,6 +293,7 @@ class SparkJob(object):
             else:
                 return master_url[0]
         else: 
+            logger.info('Job does not seem to be running')
             return None
 
     def _master_url(self, jobid, timeout=60): 
@@ -361,7 +361,6 @@ class SparkJob(object):
         """Stop the current job"""
         self._stop(self.jobid)
         self.prop_dict['status'] = 'stopped'
-        self._dump_to_json()
 
 
     @classmethod
@@ -384,7 +383,11 @@ class SparkJob(object):
         command = shlex.split(cls._get_current_jobs)
         command.append(str(jobid))
         stat = subprocess.check_output(command).split('\n')
-        running = 'RUN' in stat[1].split()[1]
+        try: 
+            running = 'RUN' in stat[1].split()[1]
+        except IndexError: 
+            running = False
+
         return running
 
 
@@ -393,6 +396,7 @@ class SparkJob(object):
         """Determine which Spark clusters are currently running or in the queue"""
         command = shlex.split(cls._get_current_jobs)
         sparkjob_files = glob.glob(os.path.join(os.path.expanduser('~'),'.sparkhpc*'))
+        sparkjob_files.sort()
         lsfjobs = subprocess.check_output(command, stderr=subprocess.STDOUT)
         jobids = set([s.split()[2] for s in lsfjobs.split('\n')[1:-1]])
 
@@ -409,7 +413,7 @@ class SparkJob(object):
         sjs = self.current_clusters()
 
         if len(sjs) == 0: 
-            print('No Spark clusters found')
+            logger.info('No Spark clusters found')
 
         else:
             if IPYTHON:
@@ -428,68 +432,6 @@ class SparkJob(object):
         self.stop()
         sys.exit(0)
 
-
-
-class LSFSparkJob(SparkJob):
-    """Class for submitting spark jobs with the LSF scheduler"""
-    _peek_command = 'bpeek'
-    _submit_command = 'bsub < %s'
-    _job_regex = 'Job <(\d+)>'
-    _kill_command = 'bkill'
-    _get_current_jobs = 'bjobs -o "job_name stat jobid"'
-
-
-class SLURMSparkJob(SparkJob):
-    """Class for submitting spark jobs with the SLURM scheduler"""
-    _peek_command = ""
-    _submit_command = 'sbatch %s'
-    _job_regex = "job (\d+)"
-    _kill_command = 'scancel'
-    _get_current_jobs = 'squeue -o "%.j %.T %.i" -j'
-
-    def __init__(self, walltime='00:30', **kwargs): 
-        h,m = map(lambda x: int(x), walltime.split(':'))
-
-        super(SLURMSparkJob, self).__init__(**kwargs)
-
-        self.prop_dict['walltime'] = m + 60*h
-
-
-    def _get_master(self, jobid, regex = None, timeout=60):
-        """Retrieve the spark master address for jobid"""
-
-        if self._job_started(jobid): 
-            timein = time.time()
-            while time.time() - timein < timeout:
-                with open(os.path.join(self.workdir, 'sparkcluster-%s.log'%self.jobid)) as f: 
-                    master_url = re.findall(regex, f.read())
-                if len(master_url) > 0: 
-                    break
-                else:
-                    time.sleep(0.5)
-        
-            if len(master_url) == 0: 
-                raise RuntimeError('Unable to obtain information about Spark master -- are you sure it is running?')
-            else:
-                return master_url[0]
-        else: 
-            return None
-
-    def _submit_job(cls, jobfile): 
-        """Submits the jobfile and returns the job ID"""
-
-        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, 
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        try: 
-            jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
-        except Exception as e: 
-            logger.error('Job submission failed or jobid invalid')
-            raise e
-        return jobid
-
-
-templates = {LSFSparkJob: 'sparkjob.lsf.template', SLURMSparkJob: 'sparkjob.slurm.template'}
-_sparkjob_registry = {'lsf': LSFSparkJob, 'slurm': SLURMSparkJob}
 
 def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     """
@@ -567,3 +509,19 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     outfile.close()
 
 
+from lsfsparkjob import LSFSparkJob
+from slurmsparkjob import SLURMSparkJob
+
+templates = {LSFSparkJob: 'sparkjob.lsf.template', SLURMSparkJob: 'sparkjob.slurm.template'}
+_sparkjob_registry = {'lsf': LSFSparkJob, 'slurm': SLURMSparkJob}
+
+def _sparkjob_factory(scheduler): 
+    """Return the correct class for the given scheduler"""
+
+    if scheduler in _sparkjob_registry:
+        return _sparkjob_registry[scheduler]
+    else: 
+        raise RuntimeError('Scheduler %s not supported'%scheduler)
+
+
+sparkjob = _sparkjob_factory(SCHEDULER)

@@ -7,6 +7,7 @@
 
 from __future__ import print_function
 import click
+import sparkhpc
 from sparkhpc import sparkjob
 import subprocess
 import os
@@ -23,7 +24,7 @@ SCHEDULER = sparkjob.get_scheduler()
 @click.option('--scheduler', type=click.Choice(['lsf', 'slurm']), default=SCHEDULER, help='Which scheduler to use')
 @click.pass_context
 def cli(ctx, scheduler):
-    ctx.obj['SJ'] = sparkjob._sparkjob_factory(scheduler)
+    ctx.obj['SJ'] = sparkjob.sparkjob
 
 
 @cli.command()
@@ -55,13 +56,14 @@ def start(ctx, ncores, walltime, jobname, template, memory, spark_home, wait):
 @click.pass_context
 def info(ctx):
     """Get info about currently running clusters"""
-    SJ = ctx.obj['SJ']
-    sjs = SJ.current_clusters()
+    # SJ = ctx.obj['SJ']
+    # sjs = SJ.current_clusters()
 
-    if len(sjs)>0:
-        sjs[0].show_clusters()
-    else: 
-        logger.info(' No spark clusters running')
+    # if len(sjs)>0:
+    #     sjs[0].show_clusters()
+    # else: 
+    #     logger.info(' No spark clusters running')
+    sparkhpc.show_clusters()
 
 @cli.command()
 @click.argument('clusterid')
