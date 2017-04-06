@@ -84,12 +84,12 @@ Job <31463649> is being terminated
 ### Python code
 
 ```python
-from sparkhpc.sparkjob import LSFSparkJob
+from sparkhpc import sparkjob
 import findspark 
 findspark.init() # this sets up the paths required to find spark libraries
 import pyspark
 
-sj = LSFSparkJob(ncores=10)
+sj = sparkjob.sparkjob(ncores=10)
 
 sj.wait_to_start()
 
@@ -125,7 +125,7 @@ Currently only LSF is supported. However, adding support for other schedulers is
 
 To implement support for a new scheduler you should subclass `SparkCluster`. You must define the following *class* variables: 
 
-* `_peek_command` (command to get stdout of current job)
+* `_peek()` (function to get stdout of the current job)
 * `_submit_command` (command to submit a job to the scheduler)
 * `_job_regex` (regex to get the job ID from return string of submit command)
 * `_kill_command` (scheduler command to kill a job)
