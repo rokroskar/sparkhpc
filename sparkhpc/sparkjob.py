@@ -213,10 +213,6 @@ class SparkJob(object):
 
 
     def _to_string(self): 
-        if self.job_started(): 
-            self.prop_dict['status'] = 'running'
-        else: 
-            print('not started')
         if IPYTHON:
             row = """
                     <td>{jobid}</td>
@@ -293,7 +289,7 @@ class SparkJob(object):
             else:
                 return master_url[0]
         else: 
-            logger.info('Job does not seem to be running')
+            #logger.info('Job does not seem to be running')
             return None
 
     def _master_url(self, jobid, timeout=60): 
@@ -466,15 +462,20 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     master_command = os.path.join(spark_sbin, 'start-master.sh')
 
     if SCHEDULER=='slurm':
+        # the master will start on the first host but gethostbyname doesn't always work, 
+        # e.g. if using salloc 
         nodelist = subprocess.check_output(shlex.split('srun hostname -f')).split('\n')[:-1]
         nodelist.sort()
         master_host=nodelist[0].split('.')[0]
     else:
         import socket
-        master_host=socket.gethostbyname()
+        master_host=socket.gethostbyname(socket.gethostname())
     
     os.environ['SPARK_MASTER_HOST'] = master_host
     logger.info('master command: ' + master_launch_command.format(master_command))
+
+    if not os.path.exists(os.path.join(spark_home,'logs')):
+        os.makedirs(os.path.join(spark_home,'logs'))
 
     master_log = '{spark_home}/logs/spark_master.out'.format(spark_home=spark_home)
     outfile = open(master_log, 'w+')
