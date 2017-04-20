@@ -2,6 +2,8 @@
 *~
 *.log
 _build
+build
 .ipynb_checkpoints
 dist
 *egg-info
+job
