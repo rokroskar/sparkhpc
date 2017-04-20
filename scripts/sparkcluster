@@ -32,18 +32,38 @@ def cli(ctx, scheduler):
 @click.option('--walltime', default="00:30", help="Walltime in HH:MM format")
 @click.option('--jobname', default='sparkcluster', help='Name to use for the job')
 @click.option('--template', default=None, help='Job template path')
-@click.option('--memory', default='2000', envvar='SPARK_WORKER_MEMORY',
-              help='Memory for each worker in MB')
+@click.option('--memory-per-executor', default=2000, envvar='SPARK_EXECUTOR_MEMORY',
+              help='Memory to reserve for each executor (i.e. the JVM) in MB')
+@click.option('--memory-per-core', default=2000,
+              help='Memory per core to request from scheduler in MB')
+@click.option('--cores-per-executor', default=1,
+              help='Cores per executor')
 @click.option('--spark-home', default=os.path.join(home,'spark'), envvar='SPARK_HOME', 
               help='Location of the Spark distribution')
 @click.option('--wait', default=False, is_flag=True, help='Wait until the job starts')
 @click.pass_context
-def start(ctx, ncores, walltime, jobname, template, memory, spark_home, wait):
+def start(ctx, 
+          ncores, 
+          walltime, 
+          jobname, 
+          template, 
+          memory_per_executor, 
+          memory_per_core, 
+          cores_per_executor,
+          spark_home, 
+          wait):
     """Start the spark cluster as a batch job"""
     
     SJ = ctx.obj['SJ']
 
-    sj = SJ(ncores=ncores, walltime=walltime, jobname=jobname, template=template, memory=memory, spark_home=spark_home)
+    sj = SJ(ncores=ncores, 
+            walltime=walltime, 
+            jobname=jobname, 
+            template=template, 
+            memory_per_core=memory_per_core,
+            memory_per_executor=memory_per_executor, 
+            cores_per_executor=cores_per_executor,
+            spark_home=spark_home)
     
     if wait: 
         logger.info(' Waiting for job to start - ctrl-c to stop')
@@ -56,14 +76,8 @@ def start(ctx, ncores, walltime, jobname, template, memory, spark_home, wait):
 @click.pass_context
 def info(ctx):
     """Get info about currently running clusters"""
-    # SJ = ctx.obj['SJ']
-    # sjs = SJ.current_clusters()
-
-    # if len(sjs)>0:
-    #     sjs[0].show_clusters()
-    # else: 
-    #     logger.info(' No spark clusters running')
     sparkhpc.show_clusters()
+
 
 @cli.command()
 @click.argument('clusterid')
@@ -85,7 +99,7 @@ def stop(ctx, clusterid):
 
 
 @cli.command()
-@click.option('--memory', default='2000M', help='Memory for each worker in MB')
+@click.option('--memory', default='2000M', help='Memory for each executor using a Java memory string')
 @click.option('--timeout', default=30, help='Timeout for starting spark master')
 @click.option('--cores-per-executor', default=1, help='Number of cores per executor')
 @click.pass_context
