@@ -426,6 +426,63 @@ class SparkJob(object):
                     print('----- Cluster %d -----'%i)
                     print(sj._to_string())
 
+    def start_spark(self,
+                    spark_conf=None, 
+                    executor_memory=None,
+                    profiling=False, 
+                    graphframes_package='graphframes:graphframes:0.3.0-spark2.0-s_2.11', 
+                    extra_conf = None):
+        """Launch a SparkContext 
+        
+        Parameters
+        ------
+
+        master : URL to spark master in the form 'spark://<master>:<port>'
+        
+        spark_conf : path to a spark configuration directory
+
+        executor_memory : executor memory in java memory string format, e.g. '4G'
+
+        profiling: whether to turn on python profiling or not
+
+        graphframes_package : which graphframes to load
+        """
+
+        os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages {graphframes_package} pyspark-shell"\
+                                            .format(graphframes_package=graphframes_package)
+        
+        os.environ['SPARK_CONF_DIR'] = os.path.realpath(spark_conf)
+
+        os.environ['PYSPARK_PYTHON'] = sys.executable
+
+        try: 
+            import findspark; findspark.init()
+            from pyspark import SparkContext, SparkConf
+        except ImportError: 
+            raise ImportError("Unable to find pyspark -- are you sure SPARK_HOME is set?")
+
+        conf = SparkConf()
+
+        conf.set('spark.driver.maxResultSize', '0')
+
+        if executor_memory is None: 
+            executor_memory = '%dM'%self.memory_per_executor
+
+        conf.set('spark.executor.memory', executor_memory)
+
+        if profiling: 
+            conf.set('spark.python.profile', 'true')
+        else:
+            conf.set('spark.python.profile', 'false')
+        
+        if extra_conf is not None: 
+            for k,v in extra_conf.iteritems(): 
+                conf.set(k,v)
+
+        sc = SparkContext(master=self.master_url, conf=conf)
+
+        return sc    
+
     def _sigint_handler(self, signal, frame): 
         """Handle ctrl-c from the user"""
         self.stop()
@@ -489,7 +546,6 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     while not started: 
         with open(master_log,'r') as f: 
             log = f.read()
-            print(log)
         try : 
             master_url, master_webui = re.findall('(spark://\S+:\d{4}|http://\S+:\d{4})', log)
             started = True

@@ -73,8 +73,6 @@ def stop(ctx, clusterid):
     SJ = ctx.obj['SJ']
     sjs = SJ.current_clusters()
 
-    for sj in sjs:
-        print(sj.prop_dict)
     if clusterid == 'all': 
         if len(sjs) == 0: 
             logger.info(' No clusters running')

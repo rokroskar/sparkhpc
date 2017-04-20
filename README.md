@@ -93,7 +93,7 @@ sj = sparkjob.sparkjob(ncores=10)
 
 sj.wait_to_start()
 
-sc = pyspark.SparkContext(master=sj.master_url)
+sc = sj.start_spark()
 
 sc.parallelize(...)
 ```
