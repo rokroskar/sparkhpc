@@ -1,14 +1,19 @@
-#!/bin/sh
+#!/bin/env python 
 #BSUB -J {jobname}
 #BSUB -W {walltime} # runtime to request
 #BSUB -o {jobname}-%J.log # output extra o means overwrite
 #BSUB -n {ncores} # requesting ncores cores
-#BSUB -R "span[hosts=-1] rusage[mem={memory}]" # take any available core with mem MB of memory
+#BSUB -R "span[ptile={cores_per_executor}]"
+#BSUB -R "rusage[mem={memory_per_core}]"
 
 # setup the spark paths
-export SPARK_HOME={spark_home}
-export SPARK_LOCAL_DIRS=$__LSF_JOB_TMPDIR__
-export LOCAL_DIRS=$SPARK_LOCAL_DIRS
-export SPARK_WORKER_DIR=$__LSF_JOB_TMPDIR__/work
+import os
+os.environ['SPARK_HOME']='{spark_home}'
+os.environ['SPARK_LOCAL_DIRS']=os.environ['__LSF_JOB_TMPDIR__']
+os.environ['LOCAL_DIRS']=os.environ['SPARK_LOCAL_DIRS']
+os.environ['SPARK_WORKER_DIR']=os.path.join(os.environ['SPARK_LOCAL_DIRS'], 'work')
 
-sparkcluster launch --memory {memory}M
+from sparkhpc import sparkjob
+sparkjob.start_cluster('{memory_per_executor}M', 
+                       cores_per_executor={cores_per_executor}, 
+                       spark_home='{spark_home}')

@@ -112,7 +112,7 @@ class SparkJob(object):
                 ncores=4,
                 cores_per_executor=1, 
                 walltime='00:30',
-                memory=2000, 
+                memory_per_core=2000, 
                 memory_per_executor=None,
                 jobname='sparkcluster',  
                 template=None, 
@@ -133,8 +133,12 @@ class SparkJob(object):
             number of cores to request
         walltime: string
             walltime in `HH:MM` format as a string
-        memory: int
-            memory to request per core in MB
+        memory_per_core: int
+            memory to request per core from the scheduler in MB
+        memory_per_executor: int
+            memory to give to each spark executor (i.e. the jvm part) in MB
+            If using pyspark and python workers need a lot of memory, 
+            this should be less than `memory_per_core` * `ncores`.
         jobname: string
             name for the job - only used for the scheduler
         template: file path
@@ -144,16 +148,19 @@ class SparkJob(object):
         spark_home: 
             path to spark directory; default is the `SPARK_HOME` environment variable, 
             and if it is not set it defaults to `~/spark`
+        scheduler: string
+            specify manually which scheduler you want to use; 
+            usually the automatic determination will work fine so this should not be used
 
         Example usage
         -------------
 
-            from sparkhpc.sparkjob import LSFSparkJob
+            from sparkhpc.sparkjob import sparkjob
             import findspark 
             findspark.init() # this sets up the paths required to find spark libraries
             import pyspark
 
-            sj = LSFSparkJob(ncores=10)
+            sj = sparkjob(ncores=10)
 
             sj.wait_to_start()
 
@@ -183,18 +190,15 @@ class SparkJob(object):
                 if not os.path.exists(spark_home):
                     raise RuntimeError('Please make sure you either put spark in ~/spark or set the SPARK_HOME environment variable.')
 
-            if memory_per_executor is not None: 
-                memory = memory_per_executor * ncores
-
-            else: 
-                memory_per_executor = memory
+            if memory_per_executor is None: 
+                memory_per_executor = memory_per_core * ncores
 
             # save the properties in a dictionary
             self.prop_dict = {'ncores': ncores,
                               'cores_per_executor': cores_per_executor,
                               'walltime': walltime,
                               'template': template,
-                              'memory': memory,
+                              'memory_per_core': memory_per_core,
                               'memory_per_executor': memory_per_executor,
                               'config_dir': config_dir,
                               'jobname': jobname,
@@ -322,9 +326,8 @@ class SparkJob(object):
                                   ncores=self.ncores, 
                                   cores_per_executor=self.cores_per_executor,
                                   number_of_executors=self.ncores/self.cores_per_executor,
-                                  memory=self.memory, 
+                                  memory_per_core=self.memory_per_core, 
                                   memory_per_executor=self.memory_per_executor,
-                                  memory_per_core=int(self.memory_per_executor)/int(self.cores_per_executor),
                                   jobname=self.jobname, 
                                   spark_home=self.spark_home)
 

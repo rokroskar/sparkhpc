@@ -17,5 +17,6 @@ os.environ['SPARK_WORKER_DIR']=os.path.join(os.environ['SPARK_LOCAL_DIRS'], 'wor
 
 from sparkhpc import sparkjob
 
-#sparkcluster launch --memory {memory_per_executor}M --cores-per-executor={cores_per_executor} 
-sparkjob.start_cluster('{memory_per_executor}M', cores_per_executor={cores_per_executor}, spark_home='{spark_home}')
+sparkjob.start_cluster('{memory_per_executor}M', 
+                       cores_per_executor={cores_per_executor}, 
+                       spark_home='{spark_home}')
