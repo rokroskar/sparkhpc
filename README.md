@@ -66,7 +66,7 @@ $ sparkcluster start 10
 ```
 $ sparkcluster info
 ----- Cluster 0 -----
-Job 31454252 yet started
+Job 31454252 not yet started
 
 $ sparkcluster info
 ----- Cluster 0 -----
@@ -178,3 +178,7 @@ To access the notebook, inspect the output below for the port number, then point
 So in this case, you could set up a port forward to host `1.2.3.4` and instruct your browser to connect to `https://1.2.3.4:8889`.
 
 Inside the notebook, it is straightforward to set up the `SparkContext` using the `sparkhpc` package (see above). 
+
+## Contributing
+
+Please submit an issue if you discover a bug or have a feature request! Pull requests also very welcome.

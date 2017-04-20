@@ -12,4 +12,3 @@ logger = logging.getLogger(__name__)
 
 def show_clusters():
     sparkjob.sparkjob().show_clusters()
-
