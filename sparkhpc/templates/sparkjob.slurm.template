@@ -1,19 +1,22 @@
-#!/bin/env python 
-#BSUB -J {jobname}
-#BSUB -W {walltime} # runtime to request
-#BSUB -o {jobname}-%J.log # output extra o means overwrite
-#BSUB -n {ncores} # requesting ncores cores
-#BSUB -R "span[ptile={cores_per_executor}]"
-#BSUB -R "rusage[mem={memory_per_core}]"
+#!/bin/env python
+#SBATCH -J {jobname}
+#SBATCH -t {walltime} # runtime to request !!! in minutes !!!
+#SBATCH -o {jobname}-%J.log # output extra o means overwrite
+#SBATCH -n {number_of_executors} # requesting n tasks
+#SBATCH -c {cores_per_executor}
+#SBATCH --mem-per-cpu={memory_per_core} 
+#SBATCH -N {number_of_executors}
+#SBATCH --ntasks-per-core=1
 
 # setup the spark paths
 import os
 os.environ['SPARK_HOME']='{spark_home}'
-os.environ['SPARK_LOCAL_DIRS']=os.environ['__LSF_JOB_TMPDIR__']
+os.environ['SPARK_LOCAL_DIRS']='/tmp'
 os.environ['LOCAL_DIRS']=os.environ['SPARK_LOCAL_DIRS']
 os.environ['SPARK_WORKER_DIR']=os.path.join(os.environ['SPARK_LOCAL_DIRS'], 'work')
 
 from sparkhpc import sparkjob
+
 sparkjob.start_cluster('{memory_per_executor}M', 
                        cores_per_executor={cores_per_executor}, 
                        spark_home='{spark_home}')
