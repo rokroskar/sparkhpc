@@ -29,12 +29,11 @@ There are two options for using this library: from the command line or directly 
 #### Get usage info
 
 ```
-$ sparkcluster
 Usage: sparkcluster [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  --scheduler [lsf]  Which scheduler to use
-  --help             Show this message and exit.
+  --scheduler [lsf|slurm]  Which scheduler to use
+  --help                   Show this message and exit.
 
 Commands:
   info    Get info about currently running clusters
@@ -42,19 +41,23 @@ Commands:
   start   Start the spark cluster as a batch job
   stop    Kill a currently running cluster ('all' to...
 
-$ sparkcluster submit --help
+$ sparkcluster start --help
 Usage: sparkcluster start [OPTIONS] NCORES
 
   Start the spark cluster as a batch job
 
 Options:
-  --walltime TEXT     Walltime in HH:MM format
-  --jobname TEXT      Name to use for the job
-  --template TEXT     Job template path
-  --memory TEXT       Memory for each worker in MB
-  --spark-home TEXT   Location of the Spark distribution
-  --wait              Wait until the job starts
-  --help              Show this message and exit.
+  --walltime TEXT                Walltime in HH:MM format
+  --jobname TEXT                 Name to use for the job
+  --template TEXT                Job template path
+  --memory-per-executor INTEGER  Memory to reserve for each executor (i.e. the
+                                 JVM) in MB
+  --memory-per-core INTEGER      Memory per core to request from scheduler in
+                                 MB
+  --cores-per-executor INTEGER   Cores per executor
+  --spark-home TEXT              Location of the Spark distribution
+  --wait                         Wait until the job starts
+  --help                         Show this message and exit.
 ```
 
 #### Start a cluster
