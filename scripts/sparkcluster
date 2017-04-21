@@ -38,8 +38,7 @@ def cli():
 @click.option('--spark-home', default=os.path.join(home,'spark'), envvar='SPARK_HOME', 
               help='Location of the Spark distribution')
 @click.option('--wait', default=False, is_flag=True, help='Wait until the job starts')
-def start(ctx, 
-          ncores, 
+def start(ncores, 
           walltime, 
           jobname, 
           template, 
