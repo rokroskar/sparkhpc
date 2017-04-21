@@ -3,6 +3,7 @@ import os, sys
 import logging
 import sparkjob
 import lsfsparkjob
+import slurmsparkjob
 from lsfsparkjob import LSFSparkJob
 from slurmsparkjob import SLURMSparkJob
 

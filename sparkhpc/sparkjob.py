@@ -62,6 +62,8 @@ def get_scheduler():
         SCHEDULER = 'lsf'
     elif which('squeue') is not None: 
         SCHEDULER = 'slurm'
+    else: 
+        SCHEDULER = None
     return SCHEDULER
 
 SCHEDULER = get_scheduler()
@@ -122,8 +124,7 @@ class SparkJob(object):
         """
         Creates a SparkJob
         
-        Parameters
-        ----------
+        Parameters:
 
         clusterid: int
             if a spark cluster is already running, initialize this SparkJob with its metadata
@@ -152,8 +153,8 @@ class SparkJob(object):
             specify manually which scheduler you want to use; 
             usually the automatic determination will work fine so this should not be used
 
-        Example usage
-        -------------
+        Example usage:
+        
 
             from sparkhpc.sparkjob import sparkjob
             import findspark 
@@ -435,17 +436,18 @@ class SparkJob(object):
         """Launch a SparkContext 
         
         Parameters
-        ------
 
-        master : URL to spark master in the form 'spark://<master>:<port>'
-        
-        spark_conf : path to a spark configuration directory
-
-        executor_memory : executor memory in java memory string format, e.g. '4G'
-
-        profiling: whether to turn on python profiling or not
-
-        graphframes_package : which graphframes to load
+        spark_conf: path
+            path to a spark configuration directory
+        executor_memory: string
+            executor memory in java memory string format, e.g. '4G'
+            If `None`, `memory_per_executor` is used. 
+        profiling: boolean
+            whether to turn on python profiling or not
+        graphframes_package: string
+            which graphframes to load - if it isn't found, spark will attempt to download it
+        extra_conf: dict
+            additional configuration options
         """
 
         os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages {graphframes_package} pyspark-shell"\
@@ -497,7 +499,6 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     assigned by the scheduler. 
 
     Parameters
-    ----------
 
     memory: string
         memory specified using java memory format
@@ -580,6 +581,8 @@ def _sparkjob_factory(scheduler):
 
     if scheduler in _sparkjob_registry:
         return _sparkjob_registry[scheduler]
+    elif scheduler is None: 
+        pass
     else: 
         raise RuntimeError('Scheduler %s not supported'%scheduler)
 

@@ -21,11 +21,8 @@ home = os.path.expanduser('~')
 SCHEDULER = sparkjob.get_scheduler()
 
 @click.group()
-@click.option('--scheduler', type=click.Choice(['lsf', 'slurm']), default=SCHEDULER, help='Which scheduler to use')
-@click.pass_context
-def cli(ctx, scheduler):
-    ctx.obj['SJ'] = sparkjob.sparkjob
-
+def cli():
+    pass
 
 @cli.command()
 @click.argument('ncores', type=int)
@@ -41,7 +38,6 @@ def cli(ctx, scheduler):
 @click.option('--spark-home', default=os.path.join(home,'spark'), envvar='SPARK_HOME', 
               help='Location of the Spark distribution')
 @click.option('--wait', default=False, is_flag=True, help='Wait until the job starts')
-@click.pass_context
 def start(ctx, 
           ncores, 
           walltime, 
@@ -54,16 +50,14 @@ def start(ctx,
           wait):
     """Start the spark cluster as a batch job"""
     
-    SJ = ctx.obj['SJ']
-
-    sj = SJ(ncores=ncores, 
-            walltime=walltime, 
-            jobname=jobname, 
-            template=template, 
-            memory_per_core=memory_per_core,
-            memory_per_executor=memory_per_executor, 
-            cores_per_executor=cores_per_executor,
-            spark_home=spark_home)
+    sj = sparkjob.sparkjob(ncores=ncores, 
+                           walltime=walltime, 
+                           jobname=jobname, 
+                           template=template, 
+                           memory_per_core=memory_per_core,
+                           memory_per_executor=memory_per_executor, 
+                           cores_per_executor=cores_per_executor,
+                           spark_home=spark_home)
     
     if wait: 
         logger.info(' Waiting for job to start - ctrl-c to stop')
@@ -73,19 +67,16 @@ def start(ctx,
     
 
 @cli.command()
-@click.pass_context
-def info(ctx):
+def info():
     """Get info about currently running clusters"""
     sparkhpc.show_clusters()
 
 
 @cli.command()
 @click.argument('clusterid')
-@click.pass_context
-def stop(ctx, clusterid):
+def stop(clusterid):
     """Kill a currently running cluster ('all' to kill all clusters)"""
-    SJ = ctx.obj['SJ']
-    sjs = SJ.current_clusters()
+    sjs = sparkjob.sparkjob().current_clusters()
 
     if clusterid == 'all': 
         if len(sjs) == 0: 
@@ -102,10 +93,9 @@ def stop(ctx, clusterid):
 @click.option('--memory', default='2000M', help='Memory for each executor using a Java memory string')
 @click.option('--timeout', default=30, help='Timeout for starting spark master')
 @click.option('--cores-per-executor', default=1, help='Number of cores per executor')
-@click.pass_context
-def launch(ctx, memory, timeout, cores_per_executor):
+def launch(memory, timeout, cores_per_executor):
     """Launch the Spark master and workers within a current job context"""
     sparkjob.start_cluster(memory, timeout=timeout, cores_per_executor=cores_per_executor)
 
 if __name__ == "__main__":
-    cli(obj={})
+    cli()

@@ -365,7 +365,24 @@ Inside the notebook, it is straightforward to set up the `SparkContext` using th
 ## API
 
 ```eval_rst
+
+.. automodule:: sparkhpc.lsfsparkjob
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: sparkhpc.slurmsparkjob
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: sparkhpc.sparkjob
     :members:
+    :show-inheritance:
+    :special-members: __init__
+    
+.. automodule:: sparkhpc
+    :members:
+    :show-inheritance:
 ```
 

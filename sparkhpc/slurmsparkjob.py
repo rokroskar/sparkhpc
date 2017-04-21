@@ -10,7 +10,12 @@ logger = logging.getLogger('sparkhpc.slurmsparkjob')
 
 
 class SLURMSparkJob(SparkJob):
-    """Class for submitting spark jobs with the SLURM scheduler"""
+    """
+    Class for submitting spark jobs with the SLURM scheduler
+
+    See the `SparkJob` class for keyword descriptions.
+
+    """
     _submit_command = 'sbatch %s'
     _job_regex = "job (\d+)"
     _kill_command = 'scancel'
