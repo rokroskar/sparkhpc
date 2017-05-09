@@ -120,11 +120,11 @@ These are installable via `pip install`.
 
 ### Job templates
 
-A simple LSF job template is included in the distribution. If you want to use your own template, you can specify the path using the `--template` flag to `start`. See the [included template](sparkhpc/templates/sparkjob.lsf.template) for an example. Note that the variable names in curly braces, e.g. `{jobname}` will be used to inject runtime parameters. Currently you must specify `walltime`, `ncores`, `memory`, `jobname`, and `spark_home`. If you want to significantly alter the job submission, the best would be to subclass the relevant scheduler class (e.g. `LSFSparkCluster`) and override the `submit` method. 
+Simple job templates for the currently supported schedulers are included in the distribution. If you want to use your own template, you can specify the path using the `--template` flag to `start`. See the [included templates](sparkhpc/templates) for an example. Note that the variable names in curly braces, e.g. `{jobname}` will be used to inject runtime parameters. Currently you must specify `walltime`, `ncores`, `memory`, `jobname`, and `spark_home`. If you want to significantly alter the job submission, the best would be to subclass the relevant scheduler class (e.g. `LSFSparkCluster`) and override the `submit` method. 
 
 ## Using other schedulers
 
-Currently only LSF is supported. However, adding support for other schedulers is rather straightforward (see the `LSFSparkCluster` implementation for an example). Please submit a pull request if you implement a new scheduler or get in touch if you need help!
+The LSF and SLURM schedulers are currently supported. However, adding support for other schedulers is rather straightforward (see the `LSFSparkJob` and `SLURMSparkJob` implementations as examples). Please submit a pull request if you implement a new scheduler or get in touch if you need help!
 
 To implement support for a new scheduler you should subclass `SparkCluster`. You must define the following *class* variables: 
 
@@ -143,6 +143,7 @@ sparkcluster PEND 31610739
 sparkcluster PEND 31610740
 ```
 
+Depending on the scheduler's behavior, you may need to override some of the other methods as well. 
 
 ## Jupyter notebook
 
@@ -167,6 +168,8 @@ Before launching the notebook, it needs to be configured. The script will first 
 certificate - this is done to prevent other users of your cluster to stumble into your notebook by chance. 
 
 ### Launching
+On a computer cluster, you would normally either obtain an interactive job and issue the command below, or use this as a part of a batch submission script. 
+
 ```
 $ hpcnotebook launch
 To access the notebook, inspect the output below for the port number, then point your browser to https://1.2.3.4:<port_number>
@@ -178,7 +181,7 @@ To access the notebook, inspect the output below for the port number, then point
 [I 15:43:12.022 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
 ```
 
-So in this case, you could set up a port forward to host `1.2.3.4` and instruct your browser to connect to `https://1.2.3.4:8889`.
+In this case, you could set up a port forward to host `1.2.3.4` and instruct your browser to connect to `https://1.2.3.4:8889`.
 
 Inside the notebook, it is straightforward to set up the `SparkContext` using the `sparkhpc` package (see above). 
 
