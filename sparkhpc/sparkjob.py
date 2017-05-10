@@ -192,7 +192,7 @@ class SparkJob(object):
                     raise RuntimeError('Please make sure you either put spark in ~/spark or set the SPARK_HOME environment variable.')
 
             if memory_per_executor is None: 
-                memory_per_executor = memory_per_core * ncores
+                memory_per_executor = memory_per_core * cores_per_executor
 
             # save the properties in a dictionary
             self.prop_dict = {'ncores': ncores,
@@ -282,7 +282,7 @@ class SparkJob(object):
         if self._job_started(jobid): 
             timein = time.time()
             while time.time() - timein < timeout:
-                job_peek = self._peek()
+                job_peek = self._peek().decode()
                 master_url = re.findall(regex, job_peek)
                 if len(master_url) > 0: 
                     break
@@ -320,8 +320,10 @@ class SparkJob(object):
             template_file = templates[self.__class__]
             template_str = pkg_resources.resource_string('sparkhpc', 'templates/%s'%template_file)
         else : 
-            with open(self.template, 'r') as template_file: 
+            with open(self.template) as template_file: 
                 template_str = template_file.read()
+
+        template_str = template_str.decode()
 
         job = template_str.format(walltime=self.walltime, 
                                   ncores=self.ncores, 
@@ -350,7 +352,7 @@ class SparkJob(object):
         job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, 
                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try: 
-            jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
+            jobid = re.findall(cls._job_regex, job_submit.stdout.read().decode())[0]
         except Exception as e: 
             logger.error('Job submission failed or jobid invalid')
             raise e
@@ -365,7 +367,7 @@ class SparkJob(object):
 
     @classmethod
     def _stop(cls, jobid):
-        out = subprocess.check_output([cls._kill_command, jobid], stderr=subprocess.STDOUT)
+        out = subprocess.check_output([cls._kill_command, jobid], stderr=subprocess.STDOUT).decode()
         logger.info(out)
 
 
@@ -382,9 +384,9 @@ class SparkJob(object):
     def _job_started(cls, jobid): 
         command = shlex.split(cls._get_current_jobs)
         command.append(str(jobid))
-        stat = subprocess.check_output(command).split('\n')
+        stat = subprocess.check_output(command).split(b'\n')
         try: 
-            running = 'RUN' in stat[1].split()[1]
+            running = b'RUN' in stat[1].split()[1]
         except IndexError: 
             running = False
 
@@ -397,9 +399,8 @@ class SparkJob(object):
         command = shlex.split(cls._get_current_jobs)
         sparkjob_files = glob.glob(os.path.join(os.path.expanduser('~'),'.sparkhpc*'))
         sparkjob_files.sort()
-        lsfjobs = subprocess.check_output(command, stderr=subprocess.STDOUT)
+        lsfjobs = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
         jobids = set([s.split()[2] for s in lsfjobs.split('\n')[1:-1]])
-
         sjs = []
         for fname in sparkjob_files: 
             jobid = os.path.basename(fname)[9:]
@@ -453,6 +454,9 @@ class SparkJob(object):
         os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages {graphframes_package} pyspark-shell"\
                                             .format(graphframes_package=graphframes_package)
         
+        if spark_conf is None:
+            spark_conf = os.path.join(os.environ['SPARK_HOME'], 'conf')
+
         os.environ['SPARK_CONF_DIR'] = os.path.realpath(spark_conf)
 
         os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -478,7 +482,7 @@ class SparkJob(object):
             conf.set('spark.python.profile', 'false')
         
         if extra_conf is not None: 
-            for k,v in extra_conf.iteritems(): 
+            for k,v in extra_conf.items(): 
                 conf.set(k,v)
 
         sc = SparkContext(master=self.master_url, conf=conf)
@@ -570,8 +574,8 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     outfile.close()
 
 
-from lsfsparkjob import LSFSparkJob
-from slurmsparkjob import SLURMSparkJob
+from .lsfsparkjob import LSFSparkJob
+from .slurmsparkjob import SLURMSparkJob
 
 templates = {LSFSparkJob: 'sparkjob.lsf.template', SLURMSparkJob: 'sparkjob.slurm.template'}
 _sparkjob_registry = {'lsf': LSFSparkJob, 'slurm': SLURMSparkJob}

@@ -22,7 +22,7 @@ class SLURMSparkJob(SparkJob):
     _get_current_jobs = 'squeue -o "%.j %.T %.i" -j'
 
     def __init__(self, walltime='00:30', **kwargs): 
-        h,m = map(lambda x: int(x), walltime.split(':'))
+        h,m = [int(x) for x in walltime.split(':')]
 
         super(SLURMSparkJob, self).__init__(**kwargs)
 
