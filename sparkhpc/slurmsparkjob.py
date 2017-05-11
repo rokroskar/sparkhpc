@@ -33,14 +33,3 @@ class SLURMSparkJob(SparkJob):
             job_peek = f.read()
         return job_peek    
 
-    def _submit_job(cls, jobfile): 
-        """Submits the jobfile and returns the job ID"""
-
-        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, 
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        try: 
-            jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
-        except Exception as e: 
-            logger.error('Job submission failed or jobid invalid')
-            raise e
-        return jobid

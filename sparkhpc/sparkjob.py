@@ -79,7 +79,10 @@ elif SCHEDULER == 'lsf':
 
 home_dir = os.path.expanduser('~')
 
-logging.basicConfig(level=logging.INFO)
+# set up logging
+
+LOG_LEVEL = 'DEBUG' if os.environ.get('SPARKHPC_DEBUG', False) == '1' else 'INFO'
+logging.basicConfig(level=getattr(logging,LOG_LEVEL))
 logger = logging.getLogger('sparkhpc.sparkjob')
 
 
@@ -243,13 +246,11 @@ class SparkJob(object):
         else: 
             raise AttributeError('%s not an attribute of this SparkJob'%val)
 
-    @property
     def master_url(self): 
         """Get the URL of the Spark master"""
         return self._master_url(self.jobid)
 
 
-    @property
     def master_ui(self): 
         """Get the UI address of the Spark master"""
         return self._master_ui(self.jobid)
@@ -280,13 +281,16 @@ class SparkJob(object):
         """helper function to get the job output; needs to be overriden by subclasses"""
         pass
 
+
     def _get_master(self, jobid, regex = None, timeout=60):
         """Retrieve the spark master address for jobid"""
 
         if self._job_started(jobid): 
             timein = time.time()
             while time.time() - timein < timeout:
-                job_peek = self._peek().decode()
+                job_peek = self._peek()
+                logger.debug('job_peek = %s'%job_peek)
+
                 master_url = re.findall(regex, job_peek)
                 if len(master_url) > 0: 
                     break
@@ -301,9 +305,11 @@ class SparkJob(object):
             #logger.info('Job does not seem to be running')
             return None
 
+
     def _master_url(self, jobid, timeout=60): 
         """Retrieve the spark master address for jobid"""
         return self._get_master(jobid, regex='(spark://\S+:\d{4})',timeout=timeout)
+
 
     def _master_ui(self, jobid, timeout=60): 
         """Retrieve the web UI address for jobid"""
@@ -347,17 +353,20 @@ class SparkJob(object):
         self._dump_to_json()
 
         sjs = self.current_clusters()
-        logger.info('Submitted cluster %d'%(len(sjs)-1))
-
+        clusterid = len(sjs)-1
+        logger.info('Submitted cluster %d'%(clusterid))
+        
+        return clusterid
 
     @classmethod
     def _submit_job(cls, jobfile): 
         """Submits the jobfile and returns the job ID"""
 
-        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, 
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        job_submit = subprocess.check_output(cls._submit_command%jobfile, shell=True).decode()
+
+        logger.info(job_submit)
         try: 
-            jobid = re.findall(cls._job_regex, job_submit.stdout.read().decode())[0]
+            jobid = re.findall(cls._job_regex, job_submit)[0]
         except Exception as e: 
             logger.error('Job submission failed or jobid invalid')
             raise e
@@ -388,12 +397,17 @@ class SparkJob(object):
     @classmethod 
     def _job_started(cls, jobid): 
         command = shlex.split(cls._get_current_jobs)
-        command.append(str(jobid))
-        stat = subprocess.check_output(command).split(b'\n')
-        try: 
-            running = b'RUN' in stat[1].split()[1]
-        except IndexError: 
-            running = False
+        stat = subprocess.check_output(command).decode().split('\n')
+        logger.debug('get_current_jobs: ' + '\n'.join(stat))
+        
+        for line in stat:
+            logger.debug('line: ' + ' '.join(line.split()))
+            if len(line.split()) > 0:
+                if line.split()[-1] == jobid:
+                    try: 
+                        running = 'RUN' in line.split()[1]
+                    except IndexError: 
+                        running = False
 
         return running
 
@@ -401,11 +415,20 @@ class SparkJob(object):
     @classmethod
     def current_clusters(cls):
         """Determine which Spark clusters are currently running or in the queue"""
+        
+        # set up the command to query the scheduler for current jobs
         command = shlex.split(cls._get_current_jobs)
+        
+        # retrieve all the known job metadata files
         sparkjob_files = glob.glob(os.path.join(os.path.expanduser('~'),'.sparkhpc*'))
         sparkjob_files.sort()
-        lsfjobs = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
-        jobids = set([s.split()[2] for s in lsfjobs.split('\n')[1:-1]])
+        logger.debug('sparkjob files found: ' + '\n'.join(sparkjob_files))
+
+        # get all the running job IDs from the scheduler
+        jobs = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
+        jobids = set([s.split()[2] for s in jobs.split('\n')[1:-1]])
+
+        # generate SparkJob instances from the collected job IDs that have a metadata file
         sjs = []
         for fname in sparkjob_files: 
             jobid = os.path.basename(fname)[9:]

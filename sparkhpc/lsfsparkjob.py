@@ -16,4 +16,4 @@ class LSFSparkJob(SparkJob):
     _get_current_jobs = 'bjobs -o "job_name stat jobid"'
 
     def _peek(self):
-        return subprocess.check_output(["bpeek", str(self.jobid)])
+        return subprocess.check_output(["bpeek", str(self.jobid)]).decode()

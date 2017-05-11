@@ -1,0 +1,10 @@
+#!/bin/env python
+from __future__ import print_function
+
+# this is a mock bsub command that just prints a properly formatted job ID
+
+print("""NAME STATE JOBID
+bash PEND 42702645
+bash PEND 42702646
+sparkcluster RUNNING 0
+sparkcluster RUNNING 1""")
