@@ -1,4 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/sparkhpc/badge/?version=latest)](http://sparkhpc.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/rokroskar/sparkhpc.svg?branch=master)](https://travis-ci.org/rokroskar/sparkhpc)
 
 # sparkhpc: Spark on HPC clusters made easy
 
