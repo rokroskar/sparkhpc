@@ -117,7 +117,8 @@ class SparkJob(object):
                 memory_per_core=2000, 
                 memory_per_executor=None,
                 jobname='sparkcluster',  
-                template=None, 
+                template=None,
+                extra_scheduler_options="", 
                 config_dir=None, 
                 spark_home=None,
                 scheduler=None):
@@ -144,6 +145,8 @@ class SparkJob(object):
             name for the job - only used for the scheduler
         template: file path
             custom template to use for job submission
+        extra_scheduler_options: string
+            A string with custom options for the scheduler
         config_dir: directory path
             path to spark configuration directory
         spark_home: 
@@ -207,7 +210,8 @@ class SparkJob(object):
                               'status': None,
                               'spark_home': spark_home,
                               'scheduler': scheduler,
-                              'workdir': os.getcwd()
+                              'workdir': os.getcwd(),
+                              'extra_scheduler_options': extra_scheduler_options
                               }
 
         signal.signal(signal.SIGINT, self._sigint_handler)
@@ -237,7 +241,7 @@ class SparkJob(object):
         if val in self.prop_dict: 
             return self.prop_dict[val]
         else: 
-            raise AttributeError
+            raise AttributeError('%s not an attribute of this SparkJob'%val)
 
     @property
     def master_url(self): 
@@ -332,7 +336,8 @@ class SparkJob(object):
                                   memory_per_core=self.memory_per_core, 
                                   memory_per_executor=self.memory_per_executor,
                                   jobname=self.jobname, 
-                                  spark_home=self.spark_home)
+                                  spark_home=self.spark_home,
+                                  extra_scheduler_options=self.extra_scheduler_options)
 
         with open('job', 'w') as jobfile: 
             jobfile.write(job)
