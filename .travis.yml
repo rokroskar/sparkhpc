@@ -4,9 +4,7 @@ python:
   - "3.5"
 # command to install dependencies
 install:
-  - wget https://d3kbcqa49mib13.cloudfront.net/spark-2.1.1-bin-hadoop2.7.tgz
-  - tar zxf spark-2.1.1-bin-hadoop2.7.tgz
-  - ln -s spark-2.1.1-bin-hadoop2.7.tgz spark
+  - touch ~/spark
   - pip install .
   - pip install -r requirements.txt
 # command to run tests
