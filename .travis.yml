@@ -10,4 +10,5 @@ install:
 # command to run tests
 script: 
   - export PATH=./tests/bin:$PATH
+  - chmod u+x ./tests/bin/*
   - pytest
