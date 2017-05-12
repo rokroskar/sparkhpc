@@ -58,24 +58,23 @@ def which(program):
     return None
 
 def get_scheduler():
+    SCHEDULER = None
     if which('bjobs') is not None: 
         SCHEDULER = 'lsf'
-    elif which('squeue') is not None: 
+    if which('squeue') is not None: 
         SCHEDULER = 'slurm'
-    else: 
-        SCHEDULER = None
-    return SCHEDULER
-
-SCHEDULER = get_scheduler()
+    if SCHEDULER is None: 
+        raise RuntimeError('No suitable scheduler found')
 
 slaves_template = "{spark_home}/sbin/start-slave.sh {master_url} -c {cores_per_executor}"
 
-if SCHEDULER == 'slurm':
-    master_launch_command = '{0}'
-    slaves_launch_command = 'srun ' + slaves_template
-elif SCHEDULER == 'lsf':
-    master_launch_command = '{0}'
-    slaves_launch_command = 'mpirun --npernode 1 ' + slaves_template
+def get_launch_commands(scheduler):
+    if scheduler == 'slurm':
+        master_launch_command = '{0}'
+        slaves_launch_command = 'srun ' + slaves_template
+    elif scheduler == 'lsf':
+        master_launch_command = '{0}'
+        slaves_launch_command = 'mpirun --npernode 1 ' + slaves_template
 
 home_dir = os.path.expanduser('~')
 
@@ -180,7 +179,7 @@ class SparkJob(object):
             if clusterid < len(sjs): 
                 jobid = sjs[clusterid].jobid
             else: 
-                logger.error('cluster %d does not exist'%clusterid)
+                raise RuntimeError('cluster %d does not exist'%clusterid)
 
         # try to load JSON data for the job
         if jobid is not None: 
@@ -367,6 +366,7 @@ class SparkJob(object):
         logger.info(job_submit)
         try: 
             jobid = re.findall(cls._job_regex, job_submit)[0]
+            logger.debug('found jobid = %s from submission output'%jobid)
         except Exception as e: 
             logger.error('Job submission failed or jobid invalid')
             raise e
@@ -540,6 +540,9 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
         path to base spark installation
     """
 
+    scheduler = get_scheduler()
+    master_launch_command, slaves_launch_command = get_launch_commands(scheduler)
+
     if spark_home is None: 
         spark_home = os.environ.get('SPARK_HOME', os.path.join(home_dir,'spark'))
     spark_sbin = spark_home + '/sbin'
@@ -554,7 +557,7 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     # Start the master
     master_command = os.path.join(spark_sbin, 'start-master.sh')
 
-    if SCHEDULER=='slurm':
+    if scheduler=='slurm':
         # the master will start on the first host but gethostbyname doesn't always work, 
         # e.g. if using salloc 
         nodelist = subprocess.check_output(shlex.split('srun hostname -f')).split('\n')[:-1]
@@ -619,4 +622,4 @@ def _sparkjob_factory(scheduler):
         raise RuntimeError('Scheduler %s not supported'%scheduler)
 
 
-sparkjob = _sparkjob_factory(SCHEDULER)
+sparkjob = _sparkjob_factory(get_scheduler())
