@@ -7,8 +7,8 @@ install:
   - touch ~/spark
   - pip install .
   - pip install -r requirements.txt
-# command to run tests
-script: 
   - export PATH=./tests/bin:$PATH
   - chmod u+x ./tests/bin/*
+# command to run tests
+script: 
   - pytest

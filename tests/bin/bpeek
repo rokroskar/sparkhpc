@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 from __future__ import print_function
 
 # this is a mock bsub command that just prints a properly formatted job ID
