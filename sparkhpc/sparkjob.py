@@ -79,7 +79,10 @@ elif SCHEDULER == 'lsf':
 
 home_dir = os.path.expanduser('~')
 
-logging.basicConfig(level=logging.INFO)
+# set up logging
+
+LOG_LEVEL = 'DEBUG' if os.environ.get('SPARKHPC_DEBUG', False) == '1' else 'INFO'
+logging.basicConfig(level=getattr(logging,LOG_LEVEL))
 logger = logging.getLogger('sparkhpc.sparkjob')
 
 
@@ -117,7 +120,8 @@ class SparkJob(object):
                 memory_per_core=2000, 
                 memory_per_executor=None,
                 jobname='sparkcluster',  
-                template=None, 
+                template=None,
+                extra_scheduler_options="", 
                 config_dir=None, 
                 spark_home=None,
                 scheduler=None):
@@ -144,6 +148,8 @@ class SparkJob(object):
             name for the job - only used for the scheduler
         template: file path
             custom template to use for job submission
+        extra_scheduler_options: string
+            A string with custom options for the scheduler
         config_dir: directory path
             path to spark configuration directory
         spark_home: 
@@ -192,7 +198,7 @@ class SparkJob(object):
                     raise RuntimeError('Please make sure you either put spark in ~/spark or set the SPARK_HOME environment variable.')
 
             if memory_per_executor is None: 
-                memory_per_executor = memory_per_core * ncores
+                memory_per_executor = memory_per_core * cores_per_executor
 
             # save the properties in a dictionary
             self.prop_dict = {'ncores': ncores,
@@ -207,7 +213,8 @@ class SparkJob(object):
                               'status': None,
                               'spark_home': spark_home,
                               'scheduler': scheduler,
-                              'workdir': os.getcwd()
+                              'workdir': os.getcwd(),
+                              'extra_scheduler_options': extra_scheduler_options
                               }
 
         signal.signal(signal.SIGINT, self._sigint_handler)
@@ -237,15 +244,13 @@ class SparkJob(object):
         if val in self.prop_dict: 
             return self.prop_dict[val]
         else: 
-            raise AttributeError
+            raise AttributeError('%s not an attribute of this SparkJob'%val)
 
-    @property
     def master_url(self): 
         """Get the URL of the Spark master"""
         return self._master_url(self.jobid)
 
 
-    @property
     def master_ui(self): 
         """Get the UI address of the Spark master"""
         return self._master_ui(self.jobid)
@@ -276,6 +281,7 @@ class SparkJob(object):
         """helper function to get the job output; needs to be overriden by subclasses"""
         pass
 
+
     def _get_master(self, jobid, regex = None, timeout=60):
         """Retrieve the spark master address for jobid"""
 
@@ -283,6 +289,8 @@ class SparkJob(object):
             timein = time.time()
             while time.time() - timein < timeout:
                 job_peek = self._peek()
+                logger.debug('job_peek = %s'%job_peek)
+
                 master_url = re.findall(regex, job_peek)
                 if len(master_url) > 0: 
                     break
@@ -297,9 +305,11 @@ class SparkJob(object):
             #logger.info('Job does not seem to be running')
             return None
 
+
     def _master_url(self, jobid, timeout=60): 
         """Retrieve the spark master address for jobid"""
         return self._get_master(jobid, regex='(spark://\S+:\d{4})',timeout=timeout)
+
 
     def _master_ui(self, jobid, timeout=60): 
         """Retrieve the web UI address for jobid"""
@@ -320,8 +330,10 @@ class SparkJob(object):
             template_file = templates[self.__class__]
             template_str = pkg_resources.resource_string('sparkhpc', 'templates/%s'%template_file)
         else : 
-            with open(self.template, 'r') as template_file: 
+            with open(self.template) as template_file: 
                 template_str = template_file.read()
+
+        template_str = template_str.decode()
 
         job = template_str.format(walltime=self.walltime, 
                                   ncores=self.ncores, 
@@ -330,7 +342,8 @@ class SparkJob(object):
                                   memory_per_core=self.memory_per_core, 
                                   memory_per_executor=self.memory_per_executor,
                                   jobname=self.jobname, 
-                                  spark_home=self.spark_home)
+                                  spark_home=self.spark_home,
+                                  extra_scheduler_options=self.extra_scheduler_options)
 
         with open('job', 'w') as jobfile: 
             jobfile.write(job)
@@ -340,17 +353,20 @@ class SparkJob(object):
         self._dump_to_json()
 
         sjs = self.current_clusters()
-        logger.info('Submitted cluster %d'%(len(sjs)-1))
-
+        clusterid = len(sjs)-1
+        logger.info('Submitted cluster %d'%(clusterid))
+        
+        return clusterid
 
     @classmethod
     def _submit_job(cls, jobfile): 
         """Submits the jobfile and returns the job ID"""
 
-        job_submit = subprocess.Popen(cls._submit_command%jobfile, shell=True, 
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        job_submit = subprocess.check_output(cls._submit_command%jobfile, shell=True).decode()
+
+        logger.info(job_submit)
         try: 
-            jobid = re.findall(cls._job_regex, job_submit.stdout.read())[0]
+            jobid = re.findall(cls._job_regex, job_submit)[0]
         except Exception as e: 
             logger.error('Job submission failed or jobid invalid')
             raise e
@@ -365,7 +381,7 @@ class SparkJob(object):
 
     @classmethod
     def _stop(cls, jobid):
-        out = subprocess.check_output([cls._kill_command, jobid], stderr=subprocess.STDOUT)
+        out = subprocess.check_output([cls._kill_command, jobid], stderr=subprocess.STDOUT).decode()
         logger.info(out)
 
 
@@ -381,12 +397,17 @@ class SparkJob(object):
     @classmethod 
     def _job_started(cls, jobid): 
         command = shlex.split(cls._get_current_jobs)
-        command.append(str(jobid))
-        stat = subprocess.check_output(command).split('\n')
-        try: 
-            running = 'RUN' in stat[1].split()[1]
-        except IndexError: 
-            running = False
+        stat = subprocess.check_output(command).decode().split('\n')
+        logger.debug('get_current_jobs: ' + '\n'.join(stat))
+        
+        for line in stat:
+            logger.debug('line: ' + ' '.join(line.split()))
+            if len(line.split()) > 0:
+                if line.split()[-1] == jobid:
+                    try: 
+                        running = 'RUN' in line.split()[1]
+                    except IndexError: 
+                        running = False
 
         return running
 
@@ -394,12 +415,20 @@ class SparkJob(object):
     @classmethod
     def current_clusters(cls):
         """Determine which Spark clusters are currently running or in the queue"""
+        
+        # set up the command to query the scheduler for current jobs
         command = shlex.split(cls._get_current_jobs)
+        
+        # retrieve all the known job metadata files
         sparkjob_files = glob.glob(os.path.join(os.path.expanduser('~'),'.sparkhpc*'))
         sparkjob_files.sort()
-        lsfjobs = subprocess.check_output(command, stderr=subprocess.STDOUT)
-        jobids = set([s.split()[2] for s in lsfjobs.split('\n')[1:-1]])
+        logger.debug('sparkjob files found: ' + '\n'.join(sparkjob_files))
 
+        # get all the running job IDs from the scheduler
+        jobs = subprocess.check_output(command, stderr=subprocess.STDOUT).decode()
+        jobids = set([s.split()[2] for s in jobs.split('\n')[1:-1]])
+
+        # generate SparkJob instances from the collected job IDs that have a metadata file
         sjs = []
         for fname in sparkjob_files: 
             jobid = os.path.basename(fname)[9:]
@@ -453,6 +482,9 @@ class SparkJob(object):
         os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages {graphframes_package} pyspark-shell"\
                                             .format(graphframes_package=graphframes_package)
         
+        if spark_conf is None:
+            spark_conf = os.path.join(os.environ['SPARK_HOME'], 'conf')
+
         os.environ['SPARK_CONF_DIR'] = os.path.realpath(spark_conf)
 
         os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -478,7 +510,7 @@ class SparkJob(object):
             conf.set('spark.python.profile', 'false')
         
         if extra_conf is not None: 
-            for k,v in extra_conf.iteritems(): 
+            for k,v in extra_conf.items(): 
                 conf.set(k,v)
 
         sc = SparkContext(master=self.master_url, conf=conf)
@@ -570,8 +602,8 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     outfile.close()
 
 
-from lsfsparkjob import LSFSparkJob
-from slurmsparkjob import SLURMSparkJob
+from .lsfsparkjob import LSFSparkJob
+from .slurmsparkjob import SLURMSparkJob
 
 templates = {LSFSparkJob: 'sparkjob.lsf.template', SLURMSparkJob: 'sparkjob.slurm.template'}
 _sparkjob_registry = {'lsf': LSFSparkJob, 'slurm': SLURMSparkJob}

@@ -1,0 +1,14 @@
+language: python
+python:
+  - "2.7"
+  - "3.5"
+# command to install dependencies
+install:
+  - touch ~/spark
+  - pip install .
+  - pip install -r requirements.txt
+  - export PATH=./tests/bin:$PATH
+  - chmod u+x ./tests/bin/*
+# command to run tests
+script: 
+  - pytest
