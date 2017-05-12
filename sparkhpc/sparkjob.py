@@ -58,13 +58,14 @@ def which(program):
     return None
 
 def get_scheduler():
-    SCHEDULER = None
     if which('bjobs') is not None: 
-        SCHEDULER = 'lsf'
-    if which('squeue') is not None: 
-        SCHEDULER = 'slurm'
-    if SCHEDULER is None: 
-        raise RuntimeError('No suitable scheduler found')
+        scheduler = 'lsf'
+    elif which('squeue') is not None: 
+        scheduler = 'slurm'
+    else scheduler is None: 
+        logger.warn('No suitable scheduler found')
+
+    return scheduler
 
 slaves_template = "{spark_home}/sbin/start-slave.sh {master_url} -c {cores_per_executor}"
 
