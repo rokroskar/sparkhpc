@@ -1,6 +1,12 @@
 import pytest
 import os
 import sparkhpc 
+import sys
+
+if sys.version_info.major == 2: 
+    fnfe = (OSError, IOError)
+elif sys.version_info.major == 3: 
+    fnfe = FileNotFoundError
 
 def find_bindir():
     for root, subdirs, files in os.walk('.'):
@@ -16,6 +22,8 @@ log_string = """
 INFO:sparkhpc.sparkjob:master command: /cluster/home/roskarr/spark/sbin/start-master.sh
 INFO:sparkhpc.sparkjob:[start_cluster] master running at spark://1.1.1.1:7077
 INFO:sparkhpc.sparkjob:[start_cluster] master UI available at http://1.1.1.1:8080"""
+
+
 
 @pytest.fixture(autouse=True)
 def change_homedir(monkeypatch):
@@ -44,7 +52,7 @@ def sj(monkeypatch, request):
     
     try: 
         os.remove(os.path.join(testdir,'.sparkhpc1'))
-    except FileNotFoundError:
+    except fnfe:
         pass
     
 def test_job_submission(sj):
@@ -98,7 +106,7 @@ def test_jobid_start(sj):
     assert(sj.master_ui()) == 'http://1.1.1.1:8080'
 
     # this should fail
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(fnfe):
         sj2 = sj.__class__(jobid=100)
 
 
