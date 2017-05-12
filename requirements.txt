@@ -3,3 +3,4 @@ ipython==5.1.0
 setuptools==29.0.1
 click==6.6
 pytest==3.0.7
+codeclimate-test-reporter
