@@ -172,7 +172,7 @@ class SparkJob(object):
 
             sj.wait_to_start()
 
-            sc = pyspark.SparkContext(master=sj.master_url)
+            sc = pyspark.SparkContext(master=sj.master_url())
 
             sc.parallelize(...)
         """
@@ -238,7 +238,7 @@ class SparkJob(object):
         else:
             row = "Job id: {jobid}\nNumber of cores: {ncores}\nStatus: {status}\nSpark UI: {ui}\nSpark URL: {url}"
 
-        return row.format(jobid=self.jobid, ncores=self.ncores, status=self.status, ui=self.master_ui, url=self.master_url)
+        return row.format(jobid=self.jobid, ncores=self.ncores, status=self.status, ui=self.master_ui(), url=self.master_url())
 
 
     def __getattr__(self, val): 
@@ -515,7 +515,7 @@ class SparkJob(object):
             for k,v in extra_conf.items(): 
                 conf.set(k,v)
 
-        sc = SparkContext(master=self.master_url, conf=conf)
+        sc = SparkContext(master=self.master_url(), conf=conf)
 
         return sc    
 
