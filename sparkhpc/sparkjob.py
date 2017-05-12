@@ -62,7 +62,8 @@ def get_scheduler():
         scheduler = 'lsf'
     elif which('squeue') is not None: 
         scheduler = 'slurm'
-    else scheduler is None: 
+    else:
+        scheduler = None
         logger.warn('No suitable scheduler found')
 
     return scheduler
