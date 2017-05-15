@@ -103,7 +103,7 @@ def test_jobid_start(sj):
 
     # this should work
     sj2 = sj.__class__(jobid=1)
-    assert(sj.master_ui()) == 'http://1.1.1.1:8080'
+    assert(sj2.master_ui()) == 'http://1.1.1.1:8080'
 
     # this should fail
     with pytest.raises(fnfe):
@@ -112,7 +112,8 @@ def test_jobid_start(sj):
 
 def test_job_started(sj):
     sj.submit()
-    assert(sj.job_started() == True)
+    assert(sj._job_started('0') == False)
+    assert(sj._job_started('1') == True)
 
 
 def test_current_clusters(sj): 

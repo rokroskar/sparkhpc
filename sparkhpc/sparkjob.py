@@ -78,6 +78,8 @@ def get_launch_commands(scheduler):
         master_launch_command = '{0}'
         slaves_launch_command = 'mpirun --npernode 1 ' + slaves_template
 
+    return master_launch_command, slaves_launch_command
+
 home_dir = os.path.expanduser('~')
 
 # set up logging
@@ -399,9 +401,12 @@ class SparkJob(object):
     @classmethod 
     def _job_started(cls, jobid): 
         command = shlex.split(cls._get_current_jobs)
+        logger.debug('job status command: ' + cls._get_current_jobs)
         stat = subprocess.check_output(command).decode().split('\n')
         logger.debug('get_current_jobs: ' + '\n'.join(stat))
         
+        running = False
+
         for line in stat:
             logger.debug('line: ' + ' '.join(line.split()))
             if len(line.split()) > 0:
@@ -409,8 +414,7 @@ class SparkJob(object):
                     try: 
                         running = 'RUN' in line.split()[1]
                     except IndexError: 
-                        running = False
-
+                        pass
         return running
 
 

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="sparkhpc",
-      version='0.3.post1',
+      version='0.3.post2',
       author="Rok Roskar",
       author_email="roskar@ethz.ch",
       url="http://sparkhpc.readthedocs.io",
