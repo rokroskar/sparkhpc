@@ -41,6 +41,9 @@ if which('bjobs') is not None:
 elif which('squeue') is not None: 
     SCHEDULER = 'SLURM'
     HOST_ENVIRON = 'SLURM_NODELIST'
+else: 
+    # no scheduler
+    HOST_ENVIRON = 'NO_SCHEDULER_HERE'
 
 #
 # Initial inspiration for this script from https://github.com/felixcheung/vagrant-projects
