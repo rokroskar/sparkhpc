@@ -1,11 +1,11 @@
 from __future__ import print_function
 import os, sys
 import logging
-import sparkjob
-import lsfsparkjob
-import slurmsparkjob
-from lsfsparkjob import LSFSparkJob
-from slurmsparkjob import SLURMSparkJob
+from . import sparkjob
+from . import lsfsparkjob
+from . import slurmsparkjob
+from .lsfsparkjob import LSFSparkJob
+from .slurmsparkjob import SLURMSparkJob
 
 
 logging.basicConfig(level=logging.INFO)

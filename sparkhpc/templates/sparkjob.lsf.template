@@ -5,6 +5,7 @@
 #BSUB -n {ncores} # requesting ncores cores
 #BSUB -R "span[ptile={cores_per_executor}]"
 #BSUB -R "rusage[mem={memory_per_core}]"
+{extra_scheduler_options}
 
 # setup the spark paths
 import os

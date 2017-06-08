@@ -119,7 +119,7 @@ def setup(ctx, force):
         # make an ssl certificate
         certfile = "{home}/.ssh/notebook_cert.pem".format(home=home)
 
-        out = subprocess.check_output(['openssl', 'req', '-x509', '-nodes', '-days', '365', '-newkey', 'rsa:1024', '-keyout', '%s'%certfile, '-out', '%s'%certfile, '-batch'], stderr=subprocess.STDOUT)
+        out = subprocess.check_output(['openssl', 'req', '-x509', '-nodes', '-days', '365', '-newkey', 'rsa:1024', '-keyout', '%s'%certfile, '-out', '%s'%certfile, '-batch'], stderr=subprocess.STDOUT).decode()
 
         lines = out.split('\n')
         for l in lines : 
@@ -206,7 +206,7 @@ def submit(ctx, ncores, walltime, memory, template, jobname):
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     try: 
-        jobid = re.findall(job_regex[scheduler], job_submit.stdout.read())[0]
+        jobid = re.findall(job_regex[scheduler], job_submit.stdout.read().decode())[0]
     except Exception as e: 
         logger.error('Job submission failed or jobid invalid')
         raise e
