@@ -18,4 +18,5 @@ from sparkhpc import sparkjob
 sparkjob.start_cluster('{memory_per_executor}M', 
                        cores_per_executor={cores_per_executor}, 
                        spark_home='{spark_home}',
-                       master_log_dir='{master_log_dir}')
+                       master_log_dir='{master_log_dir}'
+                       master_log_filename='{master_log_filename}')
