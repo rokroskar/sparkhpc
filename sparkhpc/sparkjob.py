@@ -164,11 +164,11 @@ class SparkJob(object):
             path to directory; default is {spark_home}/logs
         master_log_filename:
             Name of the file that the Spark master's output will be written 
-            to under {master_log_dir}
+            to under {master_log_dir}; default is spark_master.out
         scheduler: string
             specify manually which scheduler you want to use; 
             usually the automatic determination will work fine so this should not be used
-        ma
+
         Example usage:
         
 
@@ -562,7 +562,7 @@ def start_cluster(memory,
         path to base spark installation
     master_log_dir: directory path
         path to directory where the spark master process writes 
-        it's stdout/stderr to a file name spark_master.out
+        its stdout/stderr to a file name spark_master.out
     master_log_filename: string
         name of the file to write Spark master's output to.
     """
