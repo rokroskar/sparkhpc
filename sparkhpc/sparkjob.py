@@ -579,7 +579,7 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     if not os.path.exists(os.path.join(spark_home,'logs')):
         os.makedirs(os.path.join(spark_home,'logs'))
 
-    master_log = '{spark_home}/logs/spark_master.out'.format(spark_home=spark_home)
+    master_log = '/home/%s/.sparkhpc/spark_master.out' % os.environ['USER']
     outfile = open(master_log, 'w+')
     master = subprocess.Popen(shlex.split(master_launch_command.format(master_command)), stdout=outfile, stderr=subprocess.STDOUT)
 
