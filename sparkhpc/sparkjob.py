@@ -127,6 +127,8 @@ class SparkJob(object):
                 extra_scheduler_options="", 
                 config_dir=None, 
                 spark_home=None,
+                master_log_dir=None,
+                master_log_filename='spark_master.out',
                 scheduler=None):
         """
         Creates a SparkJob
@@ -158,6 +160,11 @@ class SparkJob(object):
         spark_home: 
             path to spark directory; default is the `SPARK_HOME` environment variable, 
             and if it is not set it defaults to `~/spark`
+        master_log_dir:
+            path to directory; default is {spark_home}/logs
+        master_log_filename:
+            Name of the file that the Spark master's output will be written 
+            to under {master_log_dir}; default is spark_master.out
         scheduler: string
             specify manually which scheduler you want to use; 
             usually the automatic determination will work fine so this should not be used
@@ -215,6 +222,8 @@ class SparkJob(object):
                               'jobid': jobid,
                               'status': None,
                               'spark_home': spark_home,
+                              'master_log_dir': master_log_dir,
+                              'master_log_filename': master_log_filename,
                               'scheduler': scheduler,
                               'workdir': os.getcwd(),
                               'extra_scheduler_options': extra_scheduler_options
@@ -346,6 +355,8 @@ class SparkJob(object):
                                   memory_per_executor=self.memory_per_executor,
                                   jobname=self.jobname, 
                                   spark_home=self.spark_home,
+                                  master_log_dir=self.master_log_dir,
+                                  master_log_filename=self.master_log_filename,
                                   extra_scheduler_options=self.extra_scheduler_options)
 
         with open('job', 'w') as jobfile: 
@@ -529,7 +540,12 @@ class SparkJob(object):
         sys.exit(0)
 
 
-def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
+def start_cluster(memory, 
+                  cores_per_executor=1, 
+                  timeout=30, 
+                  spark_home=None, 
+                  master_log_dir=None, 
+                  master_log_filename='spark_master.out'):
     """
     Start the spark cluster
 
@@ -544,6 +560,11 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
         time in seconds to wait for the master to respond
     spark_home: directory path
         path to base spark installation
+    master_log_dir: directory path
+        path to directory where the spark master process writes 
+        its stdout/stderr to a file name spark_master.out
+    master_log_filename: string
+        name of the file to write Spark master's output to.
     """
 
     scheduler = get_scheduler()
@@ -576,10 +597,14 @@ def start_cluster(memory, cores_per_executor=1, timeout=30, spark_home=None):
     os.environ['SPARK_MASTER_HOST'] = master_host
     logger.info('master command: ' + master_launch_command.format(master_command))
 
-    if not os.path.exists(os.path.join(spark_home,'logs')):
-        os.makedirs(os.path.join(spark_home,'logs'))
+    if not master_log_dir:
+        master_log_dir=os.path.join(spark_home,'/logs')
 
-    master_log = '{spark_home}/logs/spark_master.out'.format(spark_home=spark_home)
+    if not os.path.exists(master_log_dir):
+        os.makedirs(master_log_dir)
+
+    master_log = os.path.join(master_log_dir,master_log_filename)
+    logger.info('Logging spark master process output to:'+master_log)
     outfile = open(master_log, 'w+')
     master = subprocess.Popen(shlex.split(master_launch_command.format(master_command)), stdout=outfile, stderr=subprocess.STDOUT)
 
