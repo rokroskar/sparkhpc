@@ -597,13 +597,13 @@ def start_cluster(memory,
     os.environ['SPARK_MASTER_HOST'] = master_host
     logger.info('master command: ' + master_launch_command.format(master_command))
 
-    if master_log_dir==None:
-        master_log_dir=spark_home+'/logs/spark_master.out'
+    if not master_log_dir:
+        master_log_dir=os.path.join(spark_home,'/logs')
 
     if not os.path.exists(master_log_dir):
         os.makedirs(master_log_dir)
 
-    master_log = master_log_dir+'/'+master_log_filename
+    master_log = os.path.join(master_log_dir,master_log_filename)
     logger.info('Logging spark master process output to:'+master_log)
     outfile = open(master_log, 'w+')
     master = subprocess.Popen(shlex.split(master_launch_command.format(master_command)), stdout=outfile, stderr=subprocess.STDOUT)
