@@ -350,7 +350,7 @@ class SparkJob(object):
         job = template_str.format(walltime=self.walltime, 
                                   ncores=self.ncores, 
                                   cores_per_executor=self.cores_per_executor,
-                                  number_of_executors=self.ncores/self.cores_per_executor,
+                                  number_of_executors=int(self.ncores/self.cores_per_executor),
                                   memory_per_core=self.memory_per_core, 
                                   memory_per_executor=self.memory_per_executor,
                                   jobname=self.jobname, 
@@ -587,7 +587,7 @@ def start_cluster(memory,
     if scheduler=='slurm':
         # the master will start on the first host but gethostbyname doesn't always work, 
         # e.g. if using salloc 
-        nodelist = subprocess.check_output(shlex.split('srun hostname -f')).split('\n')[:-1]
+        nodelist = subprocess.check_output(shlex.split('srun hostname -f')).decode().split('\n')[:-1]
         nodelist.sort()
         master_host=nodelist[0].split('.')[0]
     else:
