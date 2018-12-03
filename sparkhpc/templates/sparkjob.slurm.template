@@ -2,10 +2,10 @@
 #SBATCH -J {jobname}
 #SBATCH -t {walltime} # runtime to request !!! in minutes !!!
 #SBATCH -o {jobname}-%J.log # output extra o means overwrite
-#SBATCH -n {number_of_executors} # requesting n tasks
-#SBATCH -c {cores_per_executor}
-#SBATCH --mem-per-cpu={memory_per_core} 
-#SBATCH -N {number_of_executors}
+#SBATCH -n {number_of_executors:d} # requesting n tasks
+#SBATCH -c {cores_per_executor:d}
+#SBATCH --mem-per-cpu={memory_per_core:d} 
+#SBATCH -N {number_of_executors:d}
 #SBATCH --ntasks-per-core=1
 
 # setup the spark paths
